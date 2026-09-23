@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>중부지역단 시상가이드</title>
+
+<!-- ===== 카카오톡/페이스북 등 링크 공유 시 썸네일 미리보기용 메타태그 =====
+     ★★★ 배포 전 필수 확인 ★★★
+     아래 og:url, og:image, twitter:image 의 주소를
+     실제 GitHub Pages 주소(예: https://[깃허브계정].github.io/[저장소명]/)로 반드시 바꿔주세요.
+     thumbnail.jpg 파일은 index.html과 같은 폴더(저장소 루트)에 함께 올려야
+     미리보기 이미지가 정상적으로 보입니다.
+     카카오톡은 한 번 불러온 썸네일을 캐싱하므로, 이미지를 바꾼 뒤에도 안 바뀌어 보이면
+     "카카오 공유 디버거"에서 링크를 새로고침해야 할 수 있습니다. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://[깃허브계정].github.io/[저장소명]/">
+<meta property="og:title" content="중부지역단 시상가이드">
+<meta property="og:description" content="내 코드만 입력하면 이번 시책 예상 시상금을 바로 확인할 수 있어요!">
+<meta property="og:image" content="https://[깃허브계정].github.io/[저장소명]/thumbnail.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="중부지역단 시상가이드">
+<meta name="twitter:description" content="내 코드만 입력하면 이번 시책 예상 시상금을 바로 확인할 수 있어요!">
+<meta name="twitter:image" content="https://[깃허브계정].github.io/[저장소명]/thumbnail.jpg">
+</head>
+<body>
+
+<script>
+/* =====================================================================
+   ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+   ★★★ CONFIG (설정 영역) — 매주 이 부분 숫자만 바꿔서 재사용하세요 ★★★
+
+   ※★ 중요 안내 ★
+   아래 시상 기준 금액(구간표)은 실제 이번 주 확정 금액을 전달받지 못해
+   이전 버전(시상확인_v9) 파일의 예시 값을 그대로 가져온 것입니다.
+   실제 배포 전 반드시 스텝이 이번 주 확정 시상 기준으로 교체·확인해야 합니다.
+   ===================================================================== */
+const CONFIG = {
+
+  // 1) 상단 안내 문구
+  title: "중부지역단",
+  subtitle: "시상 가이드",
+
+  // 2) 실적 데이터 파일 (스텝이 매일 아침 이 파일만 새 실적으로 교체하면 됩니다)
+  dataFile: "data.xlsx",
+
+  // 3) 부문시상 / 지역단시상 각 시트의 F열 이후 항목별 판정 기준
+  //    - match : 엑셀 헤더(1행) 텍스트에 이 글자가 포함되어 있으면 이 기준을 적용합니다.
+  //              (엑셀 헤더 문구가 바뀌면 이 match 값도 함께 맞춰주세요)
+  //    - type  : "tier" = 구간별 금액/상품 지급, "threshold" = 기준 이상이면 "인정"만 표시
+  //    - tiers : [{ amount: 실적 기준값, reward: "지급 문구", value: 지급액(숫자, 정렬/합산용), type: "cash"(현금) 또는 "product"(물품) }]
+  sections: {
+
+    bumun: {
+      sheetName: "부문시상",
+      tabLabel: "부문시상",
+      items: [
+        {
+          match: "고하이캡",
+          emoji: "🌉",
+          type: "tier",
+          unit: "원",
+          tiers: [
+            { amount: 100000, reward: "500,000원", value: 500000, type: "cash" },
+            { amount: 200000, reward: "1,000,000원", value: 1000000, type: "cash" },
+            { amount: 300000, reward: "1,500,000원", value: 1500000, type: "cash" }
+          ],
+          note: "2차년도 고하이캡 브릿지 참여기간 : (예시) 9월 3~5주 & 10월 1~2주 · 하이캡 17배수 이상 계약의 인보험 실적 합산 기준"
+        },
+        {
+          match: "주력상품",
+          emoji: "🎯",
+          type: "tier",
+          unit: "원",
+          tiers: [
+            { amount: 100000, reward: "240,000원", value: 240000, type: "cash" },
+            { amount: 200000, reward: "660,000원", value: 660000, type: "cash" }
+          ],
+          note: "2차년도 주력상품 브릿지 참여기간 : (예시) 9월 4~5주 & 10월 1주 · 대상상품 : 퍼펙트플러스, 간편보험, 인생의품격, 굿앤굿1540, 굿앤굿스타"
+        },
+        {
+          match: "운전자보험",
+          emoji: "🚗",
+          type: "tier",
+          unit: "건",
+          tiers: [
+            { amount: 2, reward: "SK주유권 10,000원", value: 10000, type: "product" },
+            { amount: 4, reward: "SK주유권 30,000원", value: 30000, type: "product" },
+            { amount: 6, reward: "SK주유권 50,000원", value: 50000, type: "product" }
+          ],
+          note: "운전자보험 적용기간 : (예시) 9/14~23 · 누적 건수 기준"
+        }
+      ]
+    },
+
+    jiyeokdan: {
+      sheetName: "지역단시상",
+      tabLabel: "지역단시상",
+      items: [
+        {
+          match: "인보험",
+          emoji: "🃏",
+          type: "threshold",
+          unit: "원",
+          threshold: 100000,
+          rewardText: "하이스타 조커 인정",
+          note: "대상 : (예시) 인보험실적 10만원 이상 참여 시 (지역단별 하이스타 조커 활용)"
+        }
+      ]
+    }
+  },
+
+  // 4) 비고 문구
+  calcNote: "(위 구간표는 예시 값이 포함되어 있을 수 있습니다. 실제 시상은 회사 최종 확정 기준을 따릅니다)"
+};
+/* =====================================================================
+   ▲▲▲ CONFIG 끝 ▲▲▲
+   ===================================================================== */
+</script>
+
+<style>
+  :root{
+    --navy:#152238;
+    --orange:#FF6A13;
+    --orange-deep:#E05908;
+    --orange-tint:#FFF1E6;
+    --orange-border:#FFDCB8;
+    --bg:#FAFAF9;
+    --text:#1F2328;
+    --sub:#6B7280;
+    --card:#ffffff;
+    --border:#E9E9E7;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+    font-size:15.5px;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:0 0 70px;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:20px 20px 18px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-mascot{
+    width:76px; height:76px; object-fit:cover;
+    border-radius:50%;
+    border:2px solid var(--orange-tint);
+    flex-shrink:0;
+    -webkit-mask-image: radial-gradient(circle, #000 62%, transparent 92%);
+    mask-image: radial-gradient(circle, #000 62%, transparent 92%);
+  }
+  .topbar-text{ flex:1; min-width:0; }
+  .topbar-title{ font-size:19px; font-weight:800; color:var(--navy); letter-spacing:-0.2px; }
+  .topbar-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--orange-tint); color:var(--orange-deep);
+    font-size:11.5px; font-weight:800; padding:4px 11px; border-radius:20px; margin-top:7px;
+  }
+
+  main{ padding:22px 20px 0; }
+
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:22px 20px;
+    margin-bottom:16px;
+    border:1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+  }
+  .card h3{
+    margin:0 0 6px;
+    font-size:17px;
+    color:var(--navy);
+    font-weight:800;
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h3 .bar{ width:4px;height:16px;background:var(--orange); border-radius:2px;display:inline-block; }
+  .card .desc{ font-size:13px; color:var(--sub); margin: 0 0 18px; }
+
+  .rules-toggle-btn{
+    width:100%;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:15px 18px;
+    margin-bottom:12px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--navy);
+    cursor:pointer;
+  }
+  .rules-toggle-chevron{ transition:transform 0.2s; color:var(--sub); font-size:16px; }
+  .rules-toggle-btn.open .rules-toggle-chevron{ transform:rotate(180deg); }
+
+  .rules-panel{ display:none; margin-bottom:16px; }
+  .rules-panel.open{ display:block; }
+
+  .rules-group{
+    background:#fff; border:1px solid var(--border); border-radius:12px;
+    padding:16px 16px 4px; margin-bottom:12px;
+  }
+  .rules-cat{
+    display:inline-block; background:var(--navy); color:#fff;
+    font-size:12.5px; font-weight:800; padding:5px 12px; border-radius:6px; margin-bottom:14px;
+  }
+  .rules-block{ margin-bottom:18px; }
+  .rules-block-title{ font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px; }
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:8px; }
+  .rules-table{ border-collapse:collapse; width:100%; min-width:460px; font-size:12px; }
+  .rules-table th{
+    background:#F5F5F4; color:var(--sub); font-weight:800; font-size:11.5px;
+    padding:8px 6px; border:1px solid var(--border); text-align:center; white-space:nowrap;
+  }
+  .rules-table td{
+    padding:8px 6px; border:1px solid var(--border); text-align:center; color:var(--text);
+    vertical-align:middle;
+  }
+  .rules-table td.hl{ background:var(--orange-tint); font-weight:700; }
+  .rules-table td.amt{ color:var(--orange-deep); font-weight:900; font-size:13px; }
+  .rules-table td.amt .pct{ display:block; font-size:10.5px; font-weight:700; color:var(--sub); margin-top:2px; }
+  .rules-notes{ list-style:none; margin:10px 0 0; padding:0; }
+  .rules-notes li{
+    font-size:11px; color:var(--sub); line-height:1.5; margin-top:5px; padding-left:10px; position:relative;
+  }
+  .rules-notes li::before{ content:"※"; position:absolute; left:-3px; top:0; font-size:10px; }
+
+  label{ display:block; font-size:15px; font-weight:700; margin:16px 0 8px; color:var(--text); }
+  label:first-of-type{ margin-top:0; }
+  input[type="text"]{
+    width:100%;
+    padding:15px 16px;
+    font-size:18px;
+    letter-spacing: 0.5px;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    color:var(--text);
+    -webkit-appearance:none;
+    appearance:none;
+    transition: border-color 0.15s;
+  }
+  input:focus{ outline:none; border-color: var(--orange); }
+  .unit-hint{ font-size:12.5px; color:var(--sub); margin-top:6px; }
+  .submit-btn{
+    width:100%;
+    padding:16px;
+    margin-top:24px;
+    font-size:17.5px;
+    font-weight:800;
+    color:#fff;
+    background: var(--orange);
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow: 0 4px 14px -3px rgba(255,106,19,0.45);
+    letter-spacing: 0.2px;
+  }
+  .submit-btn:active{ transform: scale(0.99); }
+  .submit-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+
+  .status-box{
+    display:none;
+    text-align:center;
+    padding: 40px 20px;
+    color: var(--sub);
+    font-size:14.5px;
+  }
+  .status-box.show{ display:block; }
+  .status-box .spinner{
+    width:34px; height:34px; margin:0 auto 14px;
+    border:4px solid var(--border); border-top-color:var(--orange);
+    border-radius:50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .status-box.error{ color:#b9451f; }
+  .status-box .retry-btn{
+    margin-top:16px; padding:10px 20px; font-size:13.5px; font-weight:700;
+    background:#fff; border:1.5px solid var(--border); border-radius:10px; color:var(--navy);
+  }
+
+  .error-msg{
+    display:none;
+    background:#FFF1EC;
+    border:1px solid #FFCDB8;
+    color:#b9451f;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    font-weight:700;
+    margin-top:14px;
+  }
+  .error-msg.show{ display:block; }
+
+  .result-wrap{ display:none; }
+  .result-wrap.show{ display:block; }
+
+  .profile-card{
+    background: #fff;
+    border:1px solid var(--border);
+    border-left:4px solid var(--orange);
+    border-radius: 12px;
+    padding: 18px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+    display:flex; align-items:center; gap:14px;
+  }
+  .profile-mascot{ width:46px; height:46px; object-fit:cover; border-radius:50%; flex-shrink:0; border:1px solid var(--border); }
+  .profile-name{ color:var(--navy); font-size:17px; font-weight:800; }
+  .profile-org{ color:var(--sub); font-size:12.5px; margin-top:3px; }
+
+  .tabs{
+    display:flex;
+    gap:4px;
+    margin-bottom:18px;
+    border-bottom:1.5px solid var(--border);
+  }
+  .tab-btn{
+    flex:1;
+    padding:12px 8px;
+    text-align:center;
+    font-size:14.5px;
+    font-weight:700;
+    color:var(--sub);
+    background:transparent;
+    border:none;
+    border-bottom:2.5px solid transparent;
+    margin-bottom:-1.5px;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    color:var(--orange-deep);
+    border-bottom-color:var(--orange);
+  }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .tip-card{
+    background: var(--orange-tint);
+    border-radius: 12px;
+    padding: 16px 16px 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--orange-border);
+  }
+  .tip-badge-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .tip-mascot{ width:24px; height:24px; object-fit:cover; border-radius:50%; flex-shrink:0; border:1px solid #fff; }
+  .tip-badge{ display:inline-block; background:#fff; color: var(--orange-deep); font-weight:800; font-size:12.5px; padding: 4px 12px; border-radius: 20px; }
+  .tip-bubble{ background:transparent; padding: 0; font-size:14px; color: var(--text); line-height:1.6; }
+  .tip-bubble .highlight{ color: var(--orange-deep); font-weight:800; }
+
+  .detail-section-title{ display:flex; align-items:center; gap:8px; font-size:16px; font-weight:800; color: var(--text); margin: 6px 0 14px; }
+  .detail-section-title .bar{ width:4px;height:15px;background:var(--orange);border-radius:2px;display:inline-block; }
+
+  .detail-card{ background:#fff; border-radius:12px; padding:16px 16px; margin-bottom:12px; border:1px solid var(--border); }
+  .detail-title-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .detail-title{ font-size:15px; font-weight:800; color:var(--text); }
+  .detail-amount{ font-size:16.5px; font-weight:900; color: var(--orange-deep); white-space:nowrap; }
+  .detail-sub{ font-size:12.5px; color:var(--sub); margin-top:6px; }
+  .detail-tip{ margin-top:10px; font-size:13px; color:#9A5B12; background:#FFF6E9; border-radius:8px; padding:9px 12px; }
+  .detail-tip.done{ color:#1f6b3a; background:#EAF7EE; }
+  .detail-tip.warn{ color:#9A5B12; background:#FFF6E9; }
+
+  .summary-table{ background:#fff; border-radius:12px; padding:20px 18px; margin: 6px 0 18px; border:1px solid var(--border); }
+  .breakdown-row{ display:flex; justify-content:space-between; font-size:14.5px; color:var(--text); padding: 5px 0; }
+  .summary-divider{ height:1px; background:var(--border); margin: 14px 0; }
+  .summary-total-label{ font-size:14px; color:var(--sub); margin-top:6px; }
+  .summary-total-amount{ font-size:30px; font-weight:900; color: var(--orange-deep); letter-spacing:-0.5px; }
+
+  .basis-box{ font-size:12.5px; color:var(--sub); background:#FAFAF9; border-radius:10px; padding:14px 16px; margin-top:4px; border: 1px dashed var(--border); }
+  .basis-box .calc-note{ font-size:11.5px; color:#9CA0A6; margin-top:8px; }
+
+  .back-btn{
+    width:100%; margin-top:20px; padding:14px; font-size:14.5px; font-weight:700;
+    color:var(--navy); background:#fff; border:1.5px solid var(--border); border-radius:10px; cursor:pointer;
+  }
+  .back-btn:active{ background: #F5F5F4; }
+
+  .empty-tab{ text-align:center; padding:30px 10px; color:var(--sub); font-size:14px; }
+
+  footer{ padding:8px 20px 0; }
+  .notice{ font-size:12px; color:var(--sub); background:var(--card); border-radius:12px; padding:18px; border:1px solid var(--border); }
+  .notice p{ margin:6px 0; }
+  .notice .privacy{ font-weight:800; color:var(--navy); }
+  .update-badge{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:12px; color:var(--sub); margin: 14px 20px 0; text-align:center;
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <img class="topbar-mascot" src="mascot.png" alt="중부ON 마스코트">
+    <div class="topbar-text">
+      <div class="topbar-title">중부ON</div>
+      <div class="topbar-badge">🏆 <span id="hdrEyebrow"></span></div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- 시상안 보기 토글 -->
+    <button class="rules-toggle-btn" id="rulesToggleBtn">
+      <span>📋 시상안 보기</span>
+      <span class="rules-toggle-chevron" id="rulesToggleChevron">⌄</span>
+    </button>
+    <div class="rules-panel" id="rulesPanel">
+
+      <div class="rules-group">
+        <div class="rules-cat">육성 (기타 시책)</div>
+        <div class="rules-block">
+          <div class="rules-block-title">1. 지역단별 하이스타 조커활용 (4~5주차 운영)</div>
+          <div class="table-scroll">
+            <table class="rules-table">
+              <thead><tr><th>조건</th><th>시상적용</th><th>비고</th></tr></thead>
+              <tbody><tr><td>4~5주차 인보험 10만 ↑ 참여시 인정</td><td>하이스타 조커인정</td><td>-</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-group">
+        <div class="rules-cat">매출 (2차년도)</div>
+
+        <div class="rules-block">
+          <div class="rules-block-title">1. 2차년도 고하이캡 시책_플래너 직접배정</div>
+          <div class="table-scroll">
+            <table class="rules-table">
+              <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 3~5주차</th><th>10월 1~2주차</th><th>2차년도 시상금</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td rowspan="3">브릿지<br>참여</td>
+                  <td rowspan="3" class="hl">9월 3~5주<br>&amp;<br>10월 1~2주</td>
+                  <td rowspan="3">장기 하이캡<br>17배 ↑ 계약<br>(인보험)</td>
+                  <td>30만 ↑</td>
+                  <td rowspan="3">10만 ↑</td>
+                  <td class="amt">150만<br><span class="pct">(약 380%)</span></td>
+                </tr>
+                <tr><td>20만 ↑</td><td class="amt">100만<br><span class="pct">(약 330%)</span></td></tr>
+                <tr><td>10만 ↑</td><td class="amt">50만<br><span class="pct">(약 250%)</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="rules-notes">
+            <li>9월 3~5주차 : 9월 14일 ~ 9월 마감일 / 10월 1~2주차 : 10월 1일 ~ 10월 16일</li>
+            <li>단, 신상품 『인생의 품격』은 통합사망 3천만 이상 부보계약만 인정 (단, 피보험자 만 66세 이상은 미적용) 피보험자 만 66세 이상은 통합사망 3천만 미만 부보계약도 인정</li>
+            <li>신계약 체결 후, 이관된 계약은 시상제외</li>
+            <li>장기하이캡 배수는 소수점 둘째자리에서 반올림</li>
+            <li>관리사항 1~7적용</li>
+          </ul>
+        </div>
+
+        <div class="rules-block">
+          <div class="rules-block-title">2. 2차년도 주력상품 시책_플래너 직접배정 (지급률 상향)</div>
+          <div class="table-scroll">
+            <table class="rules-table">
+              <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 4~5주차</th><th>10월 1주차</th><th>2차년도 시상금</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td rowspan="2">브릿지<br>참여</td>
+                  <td rowspan="2" class="hl">9월 4~5주<br>&amp;<br>10월 1주</td>
+                  <td rowspan="2">주력상품</td>
+                  <td>20만 ↑</td>
+                  <td rowspan="2">10만 ↑</td>
+                  <td class="amt">66만<br><span class="pct">(약 220%)</span></td>
+                </tr>
+                <tr><td>10만 ↑</td><td class="amt">24만<br><span class="pct">(약 120%)</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="rules-notes">
+            <li>9월 4~5주차 : 9월 21일 ~ 9월 마감일 / 10월 1주차 : 10월 1일 ~ 10월 8일</li>
+            <li>신계약 체결 후, 이관된 계약은 시상제외</li>
+            <li>주력상품 : 퍼펙트플러스 + 간편보험 + 인생의 품격 + 굿앤굿 1540 + 굿앤굿 스타 (연납기, 세납기 전체, 하이캡 무관) (인생의 품격 통합사망 3천만원 미만 계약도 인정)</li>
+            <li>관리사항 1~7적용</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rules-group">
+        <div class="rules-cat">매출 (플래너 직접집행)</div>
+        <div class="rules-block">
+          <div class="rules-block-title">1. 명절맞이 운전자 활성화</div>
+          <div class="table-scroll">
+            <table class="rules-table">
+              <thead><tr><th>기간</th><th>기준</th><th>건수</th><th>시상</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="3">9/14~23<br>3~4주차</td><td rowspan="3">운전자<br>보험</td><td>6건 이상</td><td class="amt">주유권 5만원</td></tr>
+                <tr><td>4건 이상</td><td class="amt">주유권 3만원</td></tr>
+                <tr><td>2건 이상</td><td class="amt">주유권 1만원</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="rules-notes">
+            <li>상기 시상은 부문에서 플래너에게 직접 입력합니다.</li>
+            <li>물품은 소진 시 등가의 다른 물품으로 대체될 수 있습니다.</li>
+            <li>운전자보험 1건은 최소 월납보험료 기준 1만원 이상 (1만원 미만 시 0.5건으로 인정)</li>
+            <li>관리사항 2~7 미적용</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 코드 입력 화면 -->
+    <div class="card" id="inputCard">
+      <h3><span class="bar"></span>코드 조회</h3>
+
+      <label for="inputCode">코드</label>
+      <input type="text" id="inputCode" placeholder="예: 191144" autocomplete="off">
+      <div class="unit-hint">본인 코드(사번)를 입력하고 확인하기를 눌러주세요.</div>
+
+      <div class="error-msg" id="inputError"></div>
+
+      <button class="submit-btn" id="checkBtn">확인하기</button>
+    </div>
+
+    <!-- 데이터 로딩/오류 상태 -->
+    <div class="status-box" id="loadingBox">
+      <div class="spinner"></div>
+      <div>실적 데이터를 불러오는 중이에요...</div>
+    </div>
+    <div class="status-box error" id="loadErrorBox">
+      <div>⚠️ 실적 데이터를 불러오지 못했습니다.<br>잠시 후 다시 시도해주세요.</div>
+      <button class="retry-btn" id="retryBtn">다시 시도</button>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div class="result-wrap" id="resultWrap">
+
+      <div class="profile-card">
+        <img class="profile-mascot" src="mascot.png" alt="">
+        <div>
+          <div class="profile-name" id="profileName"></div>
+          <div class="profile-org" id="profileOrg"></div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="tabBtnBumun" data-tab="bumun"></button>
+        <button class="tab-btn" id="tabBtnJiyeokdan" data-tab="jiyeokdan"></button>
+      </div>
+
+      <div class="tab-panel active" id="panelBumun"></div>
+      <div class="tab-panel" id="panelJiyeokdan"></div>
+
+      <button class="back-btn" id="backBtn">← 다른 코드로 다시 조회하기</button>
+    </div>
+
+  </main>
+
+  <div class="update-badge" id="updateBadge">🕗 매일 오전 최신 실적으로 갱신됩니다</div>
+
+  <footer>
+    <div class="notice">
+      <p class="privacy">본 서비스는 소속 플래너 본인의 조회를 위한 것입니다.</p>
+      <p>입력하신 코드와 조회 결과는 화면에서만 계산·표시되며, 서버로 전송되거나 저장되지 않습니다.</p>
+      <p id="calcNoteText"></p>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+  function fmt(n){ return Number(n).toLocaleString('ko-KR'); }
+  function normCode(v){ return String(v == null ? '' : v).trim().toUpperCase(); }
+
+  document.getElementById('hdrEyebrow').textContent = CONFIG.title + ' ' + CONFIG.subtitle;
+  document.getElementById('calcNoteText').textContent = CONFIG.calcNote;
+  document.getElementById('tabBtnBumun').textContent = CONFIG.sections.bumun.tabLabel;
+  document.getElementById('tabBtnJiyeokdan').textContent = CONFIG.sections.jiyeokdan.tabLabel;
+
+  document.getElementById('rulesToggleBtn').addEventListener('click', function(){
+    document.getElementById('rulesPanel').classList.toggle('open');
+    this.classList.toggle('open');
+  });
+
+  var workbookData = null; // { bumun: {headers, rowsByCode}, jiyeokdan: {headers, rowsByCode} }
+  var loadFailed = false;
+
+  function parseSheet(wb, sheetName){
+    var ws = wb.Sheets[sheetName];
+    if (!ws) return null;
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    if (!rows.length) return null;
+    var header = rows[0];
+    var itemHeaders = header.slice(5).map(function(h){ return String(h == null ? '' : h).trim(); });
+    var rowsByCode = {};
+    for (var i = 1; i < rows.length; i++){
+      var r = rows[i];
+      if (!r || r.length === 0) continue;
+      var code = normCode(r[2]);
+      if (!code) continue;
+      rowsByCode[code] = {
+        branch: r[0], team: r[1], code: r[2], name: r[3], month: r[4],
+        values: itemHeaders.map(function(_, idx){
+          var raw = r[5 + idx];
+          var n = Number(raw);
+          return isNaN(n) ? 0 : n;
+        })
+      };
+    }
+    return { headers: itemHeaders, rowsByCode: rowsByCode };
+  }
+
+  function loadData(){
+    document.getElementById('inputCard').style.display = 'none';
+    document.getElementById('loadErrorBox').classList.remove('show');
+    document.getElementById('loadingBox').classList.add('show');
+
+    fetch(CONFIG.dataFile, { cache: 'no-store' })
+      .then(function(res){
+        if (!res.ok) throw new Error('fetch failed');
+        return res.arrayBuffer();
+      })
+      .then(function(buf){
+        var wb = XLSX.read(buf, { type: 'array', cellDates: true });
+        var bumun = parseSheet(wb, CONFIG.sections.bumun.sheetName);
+        var jiyeokdan = parseSheet(wb, CONFIG.sections.jiyeokdan.sheetName);
+        if (!bumun && !jiyeokdan) throw new Error('no sheets found');
+        workbookData = { bumun: bumun, jiyeokdan: jiyeokdan };
+        loadFailed = false;
+        document.getElementById('loadingBox').classList.remove('show');
+        document.getElementById('inputCard').style.display = '';
+      })
+      .catch(function(err){
+        loadFailed = true;
+        document.getElementById('loadingBox').classList.remove('show');
+        document.getElementById('loadErrorBox').classList.add('show');
+      });
+  }
+
+  document.getElementById('retryBtn').addEventListener('click', loadData);
+  loadData();
+
+  // ---- 판정 로직 ----
+  function judgeTier(value, tiers){
+    var achieved = null;
+    for (var i=0;i<tiers.length;i++){ if (value >= tiers[i].amount) achieved = tiers[i]; }
+    return achieved;
+  }
+  function nextTier(value, tiers){
+    for (var i=0;i<tiers.length;i++){ if (value < tiers[i].amount) return tiers[i]; }
+    return null;
+  }
+
+  function matchConfigItem(configItems, headerText){
+    for (var i=0;i<configItems.length;i++){
+      if (headerText.indexOf(configItems[i].match) !== -1) return configItems[i];
+    }
+    return null;
+  }
+
+  function buildSectionResult(sectionKey, record){
+    var section = CONFIG.sections[sectionKey];
+    var sheetData = workbookData[sectionKey];
+    var items = [];
+    var cashTotal = 0, productTotal = 0;
+    var anyTier = false;
+
+    if (sheetData && record){
+      sheetData.headers.forEach(function(headerText, idx){
+        var cfg = matchConfigItem(section.items, headerText);
+        var value = record.values[idx];
+        if (!cfg){
+          items.push({ configured:false, label: headerText || ('항목 ' + (idx+1)), value: value });
+          return;
+        }
+        if (cfg.type === 'threshold'){
+          var achieved = value >= cfg.threshold;
+          items.push({
+            configured:true, type:'threshold', emoji: cfg.emoji, label: headerText || cfg.match,
+            value: value, unit: cfg.unit, achieved: achieved, threshold: cfg.threshold,
+            rewardText: cfg.rewardText, remain: Math.max(0, cfg.threshold - value), note: cfg.note
+          });
+        } else {
+          anyTier = true;
+          var t = judgeTier(value, cfg.tiers);
+          var nt = nextTier(value, cfg.tiers);
+          if (t){ if (t.type === 'cash') cashTotal += t.value; else productTotal += t.value; }
+          items.push({
+            configured:true, type:'tier', emoji: cfg.emoji, label: headerText || cfg.match,
+            value: value, unit: cfg.unit, tierAchieved: t, tierNext: nt, note: cfg.note
+          });
+        }
+      });
+    }
+
+    return { items: items, cashTotal: cashTotal, productTotal: productTotal, anyTier: anyTier, found: !!record, sheetExists: !!sheetData };
+  }
+
+  function renderSection(sectionKey, result){
+    var panel = document.getElementById(sectionKey === 'bumun' ? 'panelBumun' : 'panelJiyeokdan');
+    panel.innerHTML = '';
+
+    if (!result.sheetExists){
+      panel.innerHTML = '<div class="empty-tab">이 시트의 데이터를 불러오지 못했습니다.</div>';
+      return;
+    }
+    if (!result.found){
+      panel.innerHTML = '<div class="empty-tab">이 코드로 등록된 ' + CONFIG.sections[sectionKey].tabLabel + ' 실적이 없습니다.</div>';
+      return;
+    }
+    if (result.items.length === 0){
+      panel.innerHTML = '<div class="empty-tab">표시할 시상 항목이 없습니다.</div>';
+      return;
+    }
+
+    var html = '';
+
+    // 추천 말풍선: tier 항목 중 다음 구간이 있는 첫 항목
+    var tipTarget = null;
+    for (var i=0;i<result.items.length;i++){
+      var it = result.items[i];
+      if (it.configured && it.type === 'tier' && it.tierNext){ tipTarget = it; break; }
+    }
+    if (tipTarget){
+      var remain = Math.round(tipTarget.tierNext.amount - tipTarget.value);
+      html += '<div class="tip-card"><div class="tip-badge-row"><img class="tip-mascot" src="mascot.png" alt=""><span class="tip-badge">중부ON의 추천</span></div>';
+      html += '<div class="tip-bubble">' + (tipTarget.tierAchieved ? ('지금 "' + tipTarget.label + '"으로 <span class="highlight">' + tipTarget.tierAchieved.reward + '</span>을 받고 있어요.') : ('"' + tipTarget.label + '"은 아직 시작 구간 전이에요.')) +
+        '<br><br><span class="highlight">' + fmt(remain) + tipTarget.unit + '만 더 채우시면</span> "' + tipTarget.tierNext.reward + '"으로 업그레이드돼요! 🐾</div></div>';
+    }
+
+    html += '<div class="detail-section-title"><span class="bar"></span>항목별 상세</div>';
+
+    result.items.forEach(function(it){
+      if (!it.configured){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + escapeHtml(it.label) + '</span><span class="detail-amount">' + fmt(it.value) + '</span></div>' +
+          '<div class="detail-tip warn">⚠ 이 항목은 아직 기준(CONFIG)이 설정되지 않았습니다. 스텝에게 문의해주세요.</div></div>';
+        return;
+      }
+      if (it.type === 'threshold'){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.achieved ? '인정' : '미인정') + '</span></div>' +
+          '<div class="detail-sub">이번 실적 ' + fmt(it.value) + it.unit + ' · 기준 ' + fmt(it.threshold) + it.unit + ' 이상</div>' +
+          '<div class="detail-tip' + (it.achieved ? ' done' : '') + '">' + (it.achieved ? (it.rewardText + ' 인정 완료! 🎉') : (fmt(it.remain) + it.unit + '만 더 채우면 ' + it.rewardText + '!')) + '</div></div>';
+      } else {
+        var achieved = it.tierAchieved;
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (achieved ? fmt(achieved.value) + '원' : '0원') + '</span></div>' +
+          '<div class="detail-sub">이번 실적 ' + fmt(it.value) + it.unit + (achieved ? ' · ' + achieved.reward : '') + '</div>';
+        if (it.tierNext){
+          var r = Math.round(it.tierNext.amount - it.value);
+          html += '<div class="detail-tip">' + fmt(r) + it.unit + '만 더 채우면 "' + it.tierNext.reward + '" 달성!</div>';
+        } else {
+          html += '<div class="detail-tip done">최고 구간 달성! 🎉</div>';
+        }
+        html += '</div>';
+      }
+    });
+
+    if (result.anyTier){
+      var grand = result.cashTotal + result.productTotal;
+      html += '<div class="summary-table">';
+      if (result.productTotal > 0) html += '<div class="breakdown-row"><span>🎁 물품시상 상당</span><b>' + fmt(result.productTotal) + '원</b></div>';
+      if (result.cashTotal > 0) html += '<div class="breakdown-row"><span>💰 현금시상 합계</span><b>' + fmt(result.cashTotal) + '원</b></div>';
+      html += '<div class="summary-divider"></div>';
+      html += '<div class="summary-total-label">이 탭 예상 시상금 합계</div><div class="summary-total-amount">' + fmt(grand) + '원</div>';
+      html += '</div>';
+    }
+
+    var section = CONFIG.sections[sectionKey];
+    html += '<div class="basis-box">';
+    section.items.forEach(function(cfg){
+      html += '<p>' + (cfg.emoji||'') + ' ' + escapeHtml(cfg.note || cfg.match) + '</p>';
+    });
+    html += '</div>';
+
+    panel.innerHTML = html;
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  // ---- 탭 전환 ----
+  document.getElementById('tabBtnBumun').addEventListener('click', function(){ switchTab('bumun'); });
+  document.getElementById('tabBtnJiyeokdan').addEventListener('click', function(){ switchTab('jiyeokdan'); });
+  function switchTab(key){
+    document.getElementById('tabBtnBumun').classList.toggle('active', key === 'bumun');
+    document.getElementById('tabBtnJiyeokdan').classList.toggle('active', key === 'jiyeokdan');
+    document.getElementById('panelBumun').classList.toggle('active', key === 'bumun');
+    document.getElementById('panelJiyeokdan').classList.toggle('active', key === 'jiyeokdan');
+  }
+
+  // ---- 조회 실행 ----
+  document.getElementById('checkBtn').addEventListener('click', function(){
+    var errEl = document.getElementById('inputError');
+    errEl.classList.remove('show');
+
+    if (loadFailed || !workbookData){
+      errEl.textContent = '실적 데이터를 아직 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    var raw = document.getElementById('inputCode').value;
+    var code = normCode(raw);
+    if (!code){
+      errEl.textContent = '코드를 입력해주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    var bumunRecord = workbookData.bumun ? workbookData.bumun.rowsByCode[code] : null;
+    var jiyeokdanRecord = workbookData.jiyeokdan ? workbookData.jiyeokdan.rowsByCode[code] : null;
+
+    if (!bumunRecord && !jiyeokdanRecord){
+      errEl.textContent = '코드를 다시 확인해 주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    var profileSource = bumunRecord || jiyeokdanRecord;
+    document.getElementById('profileName').textContent = (profileSource.name || '') + ' 님';
+    document.getElementById('profileOrg').textContent = [profileSource.branch, profileSource.team].filter(Boolean).join(' · ');
+
+    var bumunResult = buildSectionResult('bumun', bumunRecord);
+    var jiyeokdanResult = buildSectionResult('jiyeokdan', jiyeokdanRecord);
+    renderSection('bumun', bumunResult);
+    renderSection('jiyeokdan', jiyeokdanResult);
+    switchTab('bumun');
+
+    document.getElementById('inputCard').style.display = 'none';
+    document.getElementById('resultWrap').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('inputCode').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('checkBtn').click();
+  });
+
+  document.getElementById('backBtn').addEventListener('click', function(){
+    document.getElementById('resultWrap').classList.remove('show');
+    document.getElementById('inputCard').style.display = '';
+    document.getElementById('inputCode').value = '';
+    document.getElementById('inputError').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
