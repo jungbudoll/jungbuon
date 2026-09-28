@@ -419,6 +419,13 @@ const CONFIG = {
   }
   .back-btn:active{ background: #F5F5F4; }
 
+  .share-btn{
+    width:100%; margin-top:10px; padding:14px; font-size:14.5px; font-weight:700;
+    color:var(--orange-deep); background:var(--orange-tint); border:1.5px solid var(--orange-border); border-radius:10px; cursor:pointer;
+  }
+  .share-btn:active{ background: var(--orange-border); }
+  .share-btn.copied{ color:#1f6b3a; background:#EAF7EE; border-color:#CFE9D6; }
+
   .empty-tab{ text-align:center; padding:30px 10px; color:var(--sub); font-size:14px; }
 
   footer{ padding:8px 20px 0; }
@@ -583,6 +590,7 @@ const CONFIG = {
       <div class="tab-panel" id="panelJiyeokdan"></div>
 
       <button class="back-btn" id="backBtn">← 초기화면으로 가기</button>
+      <button class="share-btn" id="shareBtn">🔗 링크 복사해서 공유하기</button>
     </div>
 
   </main>
@@ -916,6 +924,39 @@ const CONFIG = {
     document.getElementById('inputCode').value = '';
     document.getElementById('inputError').classList.remove('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ---- 링크 복사해서 공유하기 (코드/실적은 포함하지 않고 사이트 링크만 복사) ----
+  document.getElementById('shareBtn').addEventListener('click', function(){
+    var btn = this;
+    var shareUrl = window.location.origin + window.location.pathname;
+    var onCopied = function(){
+      var original = '🔗 링크 복사해서 공유하기';
+      btn.textContent = '✅ 링크가 복사되었습니다!';
+      btn.classList.add('copied');
+      setTimeout(function(){
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 2000);
+    };
+    var fallbackCopy = function(){
+      var ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) { onCopied(); } else { window.prompt('아래 링크를 복사해서 공유해주세요:', shareUrl); }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(shareUrl).then(onCopied).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
   });
 
   // ---- 바로가기 카드: 사번 입력창으로 스크롤 + 포커스 ----
