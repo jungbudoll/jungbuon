@@ -79,7 +79,7 @@ const CONFIG = {
         },
         {
           // 하이스타 조커는 원래 "지역단시상" 시트의 인보험실적 열 데이터를 사용하지만,
-          // 실제로는 부문시상 항목이라 이번 주부터 부문시상 탭에서 표시합니다.
+          // 실제로는 부문시상 항목이라 부문시상 탭에서 표시합니다.
           // sourceSheet를 지정하면 화면은 부문시상 탭에 뜨되, 값은 jiyeokdan 시트에서 읽어옵니다.
           sourceSheet: "jiyeokdan",
           match: "인보험",
@@ -104,7 +104,36 @@ const CONFIG = {
   },
 
   // 4) 비고 문구
-  calcNote: "(위 구간표는 예시 값이 포함되어 있을 수 있습니다. 실제 시상은 회사 최종 확정 기준을 따릅니다)"
+  calcNote: "(위 구간표는 예시 값이 포함되어 있을 수 있습니다. 실제 시상은 회사 최종 확정 기준을 따릅니다)",
+
+  // 5) MY팀 현황 (팀장 전용) 설정
+  //    - leaderSheetName : 팀장 코드를 관리하는 엑셀 시트 이름. 이 시트는 "지점 | 팀 | 팀장코드" 3개 열로 구성합니다
+  //      (헤더 1행 + 팀장마다 한 줄씩). 이 시트가 엑셀에 없으면 MY팀 현황 기능은 자동으로 비활성화됩니다.
+  //    - rankingSourceSheet : 팀원 순위를 계산할 실적이 들어있는 시트 (bumun 또는 jiyeokdan 중 선택)
+  //    - rankingMatch : 위 시트의 F열 이후 헤더 텍스트 중 이 글자가 포함된 열의 값을 순위 기준으로 사용
+  //      (예: "지역단시상" 시트 G열 헤더가 "당월 인보험실적"이면 "당월"로 설정)
+  //    - rankingLabel : 화면에 표시할 순위 기준 이름 (예: "당월 인보험 실적")
+  //    - specialTeamCode / specialTeamMaxMonth : 팀 값이 specialTeamCode(예: "00")인 팀장은
+  //      같은 팀이 아니라 "같은 지점 전체"에서 차월(E열)이 specialTeamMaxMonth 이하인 사람만
+  //      순위에 포함합니다 (신입 통합 관리팀 등 특수 팀 코드를 위한 설정).
+  teamRanking: {
+    leaderSheetName: "팀장",
+    rankingSourceSheet: "jiyeokdan",
+    rankingMatch: "당월",
+    rankingLabel: "당월 인보험 실적",
+    tabLabel: "MY팀 현황",
+    specialTeamCode: "00",
+    specialTeamMaxMonth: 24
+  },
+
+  // 6) 본인 확인 (재적 시트) 설정 — 다른 사람이 코드만 알고 조회하는 것을 막기 위해
+  //    사번(코드) + 생년월일(6자리)을 함께 확인합니다.
+  //    "재적" 시트는 "지점 | 팀 | 코드 | 성명 | 생년월일" 5개 열로 구성합니다
+  //    (헤더 1행 + 사람마다 한 줄씩, 생년월일은 6자리로 예: 900101).
+  //    ★ 이 시트가 엑셀에 없으면 본인 확인이 불가능해 아무도 조회할 수 없으니, 배포 전 반드시 추가해주세요.
+  verify: {
+    sheetName: "재적"
+  }
 };
 /* =====================================================================
    ▲▲▲ CONFIG 끝 ▲▲▲
@@ -155,15 +184,6 @@ const CONFIG = {
     height:auto;
     display:block;
   }
-  .week-badge-inline{
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    font-size:12.5px; font-weight:700; color:var(--sub);
-    padding:14px 0 4px;
-  }
-  .week-badge-inline .dot{
-    width:6px; height:6px; border-radius:50%; background:var(--orange); flex-shrink:0;
-  }
-  .week-badge-inline b{ color:var(--orange-deep); font-weight:800; }
 
   main{ position:relative; z-index:1; display:block; }
 
@@ -176,53 +196,21 @@ const CONFIG = {
     box-shadow: 0 -6px 20px rgba(21,34,56,0.05);
   }
 
+  .week-badge-inline{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:12.5px; font-weight:700; color:var(--sub);
+    padding:0 0 18px;
+  }
+  .week-badge-inline .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--orange); flex-shrink:0;
+  }
+  .week-badge-inline b{ color:var(--orange-deep); font-weight:800; }
+
   /* ---- 시상안 보기: 넓고 강조된 오렌지 버튼 ---- */
   .rules-toggle-wrap{ margin-bottom:14px; }
-  .rules-toggle-btn{ width:100%; }
-
-  /* ---- 바로가기 카드 2개 (아이콘+제목+설명+화살표) ---- */
-  .shortcut-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0 6px; }
-  .shortcut-card{
-    display:block; text-align:left; position:relative;
-    background:#fff; border:1px solid var(--border); border-radius:14px;
-    padding:15px 14px 34px; cursor:pointer;
-    box-shadow: 0 1px 3px rgba(16,24,40,0.05);
-  }
-  .shortcut-icon{ font-size:24px; margin-bottom:8px; display:block; }
-  .shortcut-title{ font-size:14px; font-weight:800; color:var(--navy); display:block; }
-  .shortcut-desc{ font-size:11px; color:var(--sub); margin-top:4px; line-height:1.4; display:block; }
-  .shortcut-arrow{
-    position:absolute; right:12px; bottom:12px;
-    width:24px; height:24px; border-radius:50%;
-    background:var(--orange-tint); color:var(--orange-deep);
-    font-size:13px; font-weight:900;
-    display:flex; align-items:center; justify-content:center;
-  }
-
-  .brand-footer{ text-align:center; padding:18px 20px 4px; }
-  .brand-footer .love{ font-size:13px; font-weight:800; color:var(--navy); }
-  .brand-footer .copyright{ font-size:11px; color:var(--sub); margin-top:6px; }
-
-  .card{
-    background:var(--card);
-    border-radius:14px;
-    padding:22px 20px;
-    margin-bottom:16px;
-    border:1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(16,24,40,0.04);
-  }
-  .card h3{
-    margin:0 0 6px;
-    font-size:17px;
-    color:var(--navy);
-    font-weight:800;
-    display:flex; align-items:center; gap:8px;
-  }
-  .card h3 .bar{ width:4px;height:16px;background:var(--orange); border-radius:2px;display:inline-block; }
-  .card .desc{ font-size:13px; color:var(--sub); margin: 0 0 18px; }
-
   .rules-toggle-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%;
     padding:15px 22px;
     background: var(--orange);
     border:none;
@@ -267,6 +255,47 @@ const CONFIG = {
     font-size:11px; color:var(--sub); line-height:1.5; margin-top:5px; padding-left:10px; position:relative;
   }
   .rules-notes li::before{ content:"※"; position:absolute; left:-3px; top:0; font-size:10px; }
+
+  /* ---- 바로가기 카드 2개 (아이콘+제목+설명+화살표) ---- */
+  .shortcut-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0 6px; }
+  .shortcut-card{
+    display:block; text-align:left; position:relative;
+    background:#fff; border:1px solid var(--border); border-radius:14px;
+    padding:15px 14px 34px; cursor:pointer;
+    box-shadow: 0 1px 3px rgba(16,24,40,0.05);
+  }
+  .shortcut-icon{ font-size:24px; margin-bottom:8px; display:block; }
+  .shortcut-title{ font-size:14px; font-weight:800; color:var(--navy); display:block; }
+  .shortcut-desc{ font-size:11px; color:var(--sub); margin-top:4px; line-height:1.4; display:block; }
+  .shortcut-arrow{
+    position:absolute; right:12px; bottom:12px;
+    width:24px; height:24px; border-radius:50%;
+    background:var(--orange-tint); color:var(--orange-deep);
+    font-size:13px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .brand-footer{ text-align:center; padding:18px 20px 4px; }
+  .brand-footer .love{ font-size:13px; font-weight:800; color:var(--navy); }
+  .brand-footer .copyright{ font-size:11px; color:var(--sub); margin-top:6px; }
+
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:22px 20px;
+    margin-bottom:16px;
+    border:1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+  }
+  .card h3{
+    margin:0 0 6px;
+    font-size:17px;
+    color:var(--navy);
+    font-weight:800;
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h3 .bar{ width:4px;height:16px;background:var(--orange); border-radius:2px;display:inline-block; }
+  .card .desc{ font-size:13px; color:var(--sub); margin: 0 0 18px; }
 
   label{ display:block; font-size:15px; font-weight:700; margin:16px 0 8px; color:var(--text); }
   label:first-of-type{ margin-top:0; }
@@ -378,6 +407,27 @@ const CONFIG = {
 
   .tab-panel{ display:none; }
   .tab-panel.active{ display:block; }
+
+  .myteam-rank-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
+  .myteam-rank-item{
+    display:flex; align-items:center; gap:12px;
+    background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px;
+  }
+  .myteam-rank-item.me{ background:var(--orange-tint); border-color:var(--orange-border); }
+  .myteam-rank-num{
+    width:26px; height:26px; flex-shrink:0; border-radius:50%;
+    background:#F1F1EF; color:var(--sub); font-weight:800; font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .myteam-rank-num.rank1{ background:#FFE38A; color:#8A6300; }
+  .myteam-rank-num.rank2{ background:#E4E7EC; color:#4B5563; }
+  .myteam-rank-num.rank3{ background:#F0D3B0; color:#7A4B1E; }
+  .myteam-rank-name{ flex:1; font-size:14.5px; font-weight:700; color:var(--text); }
+  .myteam-me-badge{
+    display:inline-block; background:var(--orange); color:#fff; font-size:10.5px; font-weight:800;
+    padding:2px 7px; border-radius:10px; margin-left:4px; vertical-align:middle;
+  }
+  .myteam-rank-value{ font-size:14.5px; font-weight:800; color:var(--orange-deep); white-space:nowrap; }
 
   .tip-card{
     background: var(--orange-tint);
@@ -537,7 +587,11 @@ const CONFIG = {
 
       <label for="inputCode">사번</label>
       <input type="text" id="inputCode" placeholder="예) 999999" autocomplete="off">
-      <div class="unit-hint">본인 사번(코드)을 입력하고 확인하기를 눌러주세요.</div>
+      <div class="unit-hint">본인 사번(코드)을 입력해주세요.</div>
+
+      <label for="inputBirth">생년월일 (6자리)</label>
+      <input type="text" id="inputBirth" inputmode="numeric" maxlength="6" placeholder="예) 900101" autocomplete="off">
+      <div class="unit-hint">본인 확인을 위해 생년월일 6자리를 입력하고 확인하기를 눌러주세요.</div>
 
       <div class="error-msg" id="inputError"></div>
 
@@ -584,10 +638,12 @@ const CONFIG = {
       <div class="tabs">
         <button class="tab-btn active" id="tabBtnBumun" data-tab="bumun"></button>
         <button class="tab-btn" id="tabBtnJiyeokdan" data-tab="jiyeokdan"></button>
+        <button class="tab-btn" id="tabBtnMyteam" data-tab="myteam" style="display:none;"></button>
       </div>
 
       <div class="tab-panel active" id="panelBumun"></div>
       <div class="tab-panel" id="panelJiyeokdan"></div>
+      <div class="tab-panel" id="panelMyteam"></div>
 
       <button class="back-btn" id="backBtn">← 초기화면으로 가기</button>
       <button class="share-btn" id="shareBtn">🔗 링크 복사해서 공유하기</button>
@@ -621,13 +677,14 @@ const CONFIG = {
   document.getElementById('calcNoteText').textContent = CONFIG.calcNote;
   document.getElementById('tabBtnBumun').textContent = CONFIG.sections.bumun.tabLabel;
   document.getElementById('tabBtnJiyeokdan').textContent = CONFIG.sections.jiyeokdan.tabLabel;
+  document.getElementById('tabBtnMyteam').textContent = '👑 ' + CONFIG.teamRanking.tabLabel;
 
   document.getElementById('rulesToggleBtn').addEventListener('click', function(){
     document.getElementById('rulesPanel').classList.toggle('open');
     this.classList.toggle('open');
   });
 
-  var workbookData = null; // { bumun: {headers, rowsByCode}, jiyeokdan: {headers, rowsByCode} }
+  var workbookData = null; // { bumun: {headers, rowsByCode}, jiyeokdan: {headers, rowsByCode}, leaders: Set, verify: {code: birth6} }
   var loadFailed = false;
 
   function parseSheet(wb, sheetName){
@@ -655,6 +712,51 @@ const CONFIG = {
     return { headers: itemHeaders, rowsByCode: rowsByCode };
   }
 
+  // "팀장" 시트(지점 | 팀 | 팀장코드)를 읽어 팀장 코드 집합을 만듭니다. 시트가 없으면 빈 Set을 반환합니다.
+  function parseLeaderSheet(wb, sheetName){
+    var ws = wb.Sheets[sheetName];
+    var leaders = new Set();
+    if (!ws) return leaders;
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    for (var i = 1; i < rows.length; i++){
+      var r = rows[i];
+      if (!r || r.length === 0) continue;
+      var code = normCode(r[2]);
+      if (code) leaders.add(code);
+    }
+    return leaders;
+  }
+
+  // 생년월일을 "YYMMDD" 6자리 문자열로 정규화 (엑셀에서 텍스트/숫자/날짜 어떤 형태로 들어와도 처리)
+  function normBirth(v){
+    if (v instanceof Date && !isNaN(v)){
+      var yy = String(v.getFullYear() % 100).padStart(2, '0');
+      var mm = String(v.getMonth() + 1).padStart(2, '0');
+      var dd = String(v.getDate()).padStart(2, '0');
+      return yy + mm + dd;
+    }
+    var digits = String(v == null ? '' : v).replace(/\D/g, '');
+    if (digits.length > 6) digits = digits.slice(0, 6);
+    else digits = digits.padStart(6, '0');
+    return digits;
+  }
+
+  // "재적" 시트(지점 | 팀 | 코드 | 성명 | 생년월일)를 읽어 코드→생년월일 맵을 만듭니다.
+  function parseVerifySheet(wb, sheetName){
+    var ws = wb.Sheets[sheetName];
+    if (!ws) return null;
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    var map = {};
+    for (var i = 1; i < rows.length; i++){
+      var r = rows[i];
+      if (!r || r.length === 0) continue;
+      var code = normCode(r[2]);
+      if (!code) continue;
+      map[code] = normBirth(r[4]);
+    }
+    return map;
+  }
+
   function loadData(){
     document.getElementById('inputCard').style.display = 'none';
     document.getElementById('loadErrorBox').classList.remove('show');
@@ -670,7 +772,9 @@ const CONFIG = {
         var bumun = parseSheet(wb, CONFIG.sections.bumun.sheetName);
         var jiyeokdan = parseSheet(wb, CONFIG.sections.jiyeokdan.sheetName);
         if (!bumun && !jiyeokdan) throw new Error('no sheets found');
-        workbookData = { bumun: bumun, jiyeokdan: jiyeokdan };
+        var leaders = parseLeaderSheet(wb, CONFIG.teamRanking.leaderSheetName);
+        var verify = parseVerifySheet(wb, CONFIG.verify.sheetName);
+        workbookData = { bumun: bumun, jiyeokdan: jiyeokdan, leaders: leaders, verify: verify };
         loadFailed = false;
         document.getElementById('loadingBox').classList.remove('show');
         document.getElementById('inputCard').style.display = '';
@@ -857,11 +961,68 @@ const CONFIG = {
   // ---- 탭 전환 ----
   document.getElementById('tabBtnBumun').addEventListener('click', function(){ switchTab('bumun'); });
   document.getElementById('tabBtnJiyeokdan').addEventListener('click', function(){ switchTab('jiyeokdan'); });
+  document.getElementById('tabBtnMyteam').addEventListener('click', function(){ switchTab('myteam'); });
   function switchTab(key){
     document.getElementById('tabBtnBumun').classList.toggle('active', key === 'bumun');
     document.getElementById('tabBtnJiyeokdan').classList.toggle('active', key === 'jiyeokdan');
+    document.getElementById('tabBtnMyteam').classList.toggle('active', key === 'myteam');
     document.getElementById('panelBumun').classList.toggle('active', key === 'bumun');
     document.getElementById('panelJiyeokdan').classList.toggle('active', key === 'jiyeokdan');
+    document.getElementById('panelMyteam').classList.toggle('active', key === 'myteam');
+  }
+
+  // ---- MY팀 현황 (팀장 전용 팀원 순위) ----
+  function renderMyTeamPanel(team, branch, myCode){
+    var panel = document.getElementById('panelMyteam');
+    var src = workbookData[CONFIG.teamRanking.rankingSourceSheet];
+    if (!src){
+      panel.innerHTML = '<div class="empty-tab">순위 데이터를 불러오지 못했습니다.</div>';
+      return;
+    }
+    var colIdx = -1;
+    for (var i = 0; i < src.headers.length; i++){
+      if (src.headers[i].indexOf(CONFIG.teamRanking.rankingMatch) !== -1){ colIdx = i; break; }
+    }
+    if (colIdx === -1){
+      panel.innerHTML = '<div class="empty-tab">순위 기준 항목(' + escapeHtml(CONFIG.teamRanking.rankingMatch) + ')을 찾을 수 없습니다. 스텝에게 문의해주세요.</div>';
+      return;
+    }
+
+    var isSpecialTeam = String(team) === String(CONFIG.teamRanking.specialTeamCode);
+
+    var members = [];
+    Object.keys(src.rowsByCode).forEach(function(code){
+      var row = src.rowsByCode[code];
+      if (isSpecialTeam){
+        if (String(row.branch) !== String(branch)) return;
+        var months = Number(row.month);
+        if (isNaN(months) || months > CONFIG.teamRanking.specialTeamMaxMonth) return;
+      } else {
+        if (String(row.team) !== String(team) || String(row.branch) !== String(branch)) return;
+      }
+      members.push({ code: code, name: row.name || code, value: row.values[colIdx] || 0 });
+    });
+    members.sort(function(a, b){ return b.value - a.value; });
+
+    if (members.length === 0){
+      panel.innerHTML = '<div class="empty-tab">' + (isSpecialTeam ? '조건에 맞는 팀원 실적 데이터를 찾을 수 없습니다.' : '우리 팀 실적 데이터를 찾을 수 없습니다.') + '</div>';
+      return;
+    }
+
+    var titleSuffix = isSpecialTeam ? (escapeHtml(branch) + ' 내 ' + CONFIG.teamRanking.specialTeamMaxMonth + '차월 이하') : '우리 팀';
+    var html = '<div class="detail-section-title"><span class="bar"></span>' + titleSuffix + ' ' + escapeHtml(CONFIG.teamRanking.rankingLabel) + '순위</div>';
+    html += '<div class="myteam-rank-list">';
+    members.forEach(function(m, idx){
+      var rank = idx + 1;
+      var isMe = normCode(m.code) === myCode;
+      html += '<div class="myteam-rank-item' + (isMe ? ' me' : '') + '">' +
+        '<span class="myteam-rank-num rank' + rank + '">' + rank + '</span>' +
+        '<span class="myteam-rank-name">' + escapeHtml(m.name) + (isMe ? ' <span class="myteam-me-badge">나</span>' : '') + '</span>' +
+        '<span class="myteam-rank-value">' + fmt(m.value) + '원</span>' +
+        '</div>';
+    });
+    html += '</div>';
+    panel.innerHTML = html;
   }
 
   // ---- 조회 실행 ----
@@ -879,6 +1040,30 @@ const CONFIG = {
     var code = normCode(raw);
     if (!code){
       errEl.textContent = '코드를 입력해주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    var birthRaw = document.getElementById('inputBirth').value.trim();
+    var birthDigits = birthRaw.replace(/\D/g, '');
+    if (!birthDigits){
+      errEl.textContent = '생년월일 6자리를 입력해주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+    if (birthDigits.length !== 6){
+      errEl.textContent = '생년월일 6자리를 숫자로 정확히 입력해주세요. (예: 900101)';
+      errEl.classList.add('show');
+      return;
+    }
+
+    if (!workbookData.verify){
+      errEl.textContent = '본인 확인 정보를 불러오지 못했습니다. 스텝에게 문의해주세요.';
+      errEl.classList.add('show');
+      return;
+    }
+    if (workbookData.verify[code] !== birthDigits){
+      errEl.textContent = '사번 또는 생년월일이 일치하지 않습니다. 다시 확인해 주세요.';
       errEl.classList.add('show');
       return;
     }
@@ -901,6 +1086,16 @@ const CONFIG = {
     var jiyeokdanResult = buildSectionResult('jiyeokdan', records);
     renderSection('bumun', bumunResult);
     renderSection('jiyeokdan', jiyeokdanResult);
+
+    var isLeader = !!(workbookData.leaders && workbookData.leaders.has(code));
+    var tabBtnMyteam = document.getElementById('tabBtnMyteam');
+    if (isLeader){
+      renderMyTeamPanel(profileSource.team, profileSource.branch, code);
+      tabBtnMyteam.style.display = '';
+    } else {
+      tabBtnMyteam.style.display = 'none';
+    }
+
     switchTab(preferredTab);
 
     document.getElementById('inputCard').style.display = 'none';
@@ -914,12 +1109,16 @@ const CONFIG = {
   document.getElementById('inputCode').addEventListener('keydown', function(e){
     if (e.key === 'Enter') document.getElementById('checkBtn').click();
   });
+  document.getElementById('inputBirth').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('checkBtn').click();
+  });
 
   document.getElementById('backBtn').addEventListener('click', function(){
     document.getElementById('resultWrap').classList.remove('show');
     document.getElementById('inputCard').style.display = '';
     document.getElementById('shortcutGrid').style.display = '';
     document.getElementById('inputCode').value = '';
+    document.getElementById('inputBirth').value = '';
     document.getElementById('inputError').classList.remove('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
