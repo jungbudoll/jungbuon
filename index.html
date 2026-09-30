@@ -113,7 +113,8 @@ const CONFIG = {
   //    - rankingMatch : 위 시트의 F열 이후 헤더 텍스트 중 이 글자가 포함된 열의 값을 "순위 정렬 기준"으로 사용
   //      (예: "지역단시상" 시트 G열 헤더가 "당월 인보험실적"이면 "당월 인보험"으로 설정 — F열의 "인보험실적"과
   //      헷갈리지 않도록 "당월"까지 포함해서 구분해야 합니다)
-  //    - rankingLabel : 화면에 표시할 순위 기준 이름 (예: "당월 인보험 실적")
+  //    - rankingLabel : 항목별 카드에 표시할 순위 기준 이름 (예: "당월 인보험 실적")
+  //    - rankingTitleLabel : 맨 위 제목("우리 팀 ○○ 순위")에 쓸 짧은 이름 (예: "당월 실적")
   //    - secondaryMatch / secondaryLabel : 순위에는 쓰지 않지만 함께 보여줄 추가 실적 열
   //      (예: "지역단시상" 시트 H열 헤더가 "당월 환산실적"이면 "환산"으로 설정). 해당 열이 없으면 "-"로 표시됩니다.
   //    - specialTeamCode / specialTeamMaxMonth : 팀 값이 specialTeamCode(예: "00")인 팀장은
@@ -124,6 +125,7 @@ const CONFIG = {
     rankingSourceSheet: "jiyeokdan",
     rankingMatch: "당월 인보험",
     rankingLabel: "당월 인보험 실적",
+    rankingTitleLabel: "당월 실적",
     secondaryMatch: "환산",
     secondaryLabel: "당월 환산실적",
     tabLabel: "MY팀 현황",
@@ -1031,7 +1033,7 @@ const CONFIG = {
     }
 
     var titleSuffix = isSpecialTeam ? (escapeHtml(branch) + ' 내 ' + CONFIG.teamRanking.specialTeamMaxMonth + '차월 이하') : '우리 팀';
-    var html = '<div class="detail-section-title"><span class="bar"></span>' + titleSuffix + ' ' + escapeHtml(CONFIG.teamRanking.rankingLabel) + '순위</div>';
+    var html = '<div class="detail-section-title"><span class="bar"></span>' + titleSuffix + ' ' + escapeHtml(CONFIG.teamRanking.rankingTitleLabel) + '순위</div>';
     html += '<div class="myteam-rank-list">';
     members.forEach(function(m, idx){
       var rank = idx + 1;
