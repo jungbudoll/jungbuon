@@ -110,17 +110,22 @@ const CONFIG = {
   //    - leaderSheetName : 팀장 코드를 관리하는 엑셀 시트 이름. 이 시트는 "지점 | 팀 | 팀장코드" 3개 열로 구성합니다
   //      (헤더 1행 + 팀장마다 한 줄씩). 이 시트가 엑셀에 없으면 MY팀 현황 기능은 자동으로 비활성화됩니다.
   //    - rankingSourceSheet : 팀원 순위를 계산할 실적이 들어있는 시트 (bumun 또는 jiyeokdan 중 선택)
-  //    - rankingMatch : 위 시트의 F열 이후 헤더 텍스트 중 이 글자가 포함된 열의 값을 순위 기준으로 사용
-  //      (예: "지역단시상" 시트 G열 헤더가 "당월 인보험실적"이면 "당월"로 설정)
+  //    - rankingMatch : 위 시트의 F열 이후 헤더 텍스트 중 이 글자가 포함된 열의 값을 "순위 정렬 기준"으로 사용
+  //      (예: "지역단시상" 시트 G열 헤더가 "당월 인보험실적"이면 "당월 인보험"으로 설정 — F열의 "인보험실적"과
+  //      헷갈리지 않도록 "당월"까지 포함해서 구분해야 합니다)
   //    - rankingLabel : 화면에 표시할 순위 기준 이름 (예: "당월 인보험 실적")
+  //    - secondaryMatch / secondaryLabel : 순위에는 쓰지 않지만 함께 보여줄 추가 실적 열
+  //      (예: "지역단시상" 시트 H열 헤더가 "당월 환산실적"이면 "환산"으로 설정). 해당 열이 없으면 "-"로 표시됩니다.
   //    - specialTeamCode / specialTeamMaxMonth : 팀 값이 specialTeamCode(예: "00")인 팀장은
   //      같은 팀이 아니라 "같은 지점 전체"에서 차월(E열)이 specialTeamMaxMonth 이하인 사람만
   //      순위에 포함합니다 (신입 통합 관리팀 등 특수 팀 코드를 위한 설정).
   teamRanking: {
     leaderSheetName: "팀장",
     rankingSourceSheet: "jiyeokdan",
-    rankingMatch: "당월",
+    rankingMatch: "당월 인보험",
     rankingLabel: "당월 인보험 실적",
+    secondaryMatch: "환산",
+    secondaryLabel: "당월 환산실적",
     tabLabel: "MY팀 현황",
     specialTeamCode: "00",
     specialTeamMaxMonth: 24
@@ -410,10 +415,10 @@ const CONFIG = {
 
   .myteam-rank-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
   .myteam-rank-item{
-    display:flex; align-items:center; gap:12px;
     background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px;
   }
   .myteam-rank-item.me{ background:var(--orange-tint); border-color:var(--orange-border); }
+  .myteam-rank-top{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
   .myteam-rank-num{
     width:26px; height:26px; flex-shrink:0; border-radius:50%;
     background:#F1F1EF; color:var(--sub); font-weight:800; font-size:13px;
@@ -423,11 +428,15 @@ const CONFIG = {
   .myteam-rank-num.rank2{ background:#E4E7EC; color:#4B5563; }
   .myteam-rank-num.rank3{ background:#F0D3B0; color:#7A4B1E; }
   .myteam-rank-name{ flex:1; font-size:14.5px; font-weight:700; color:var(--text); }
+  .myteam-month{ font-size:12px; font-weight:700; color:var(--sub); }
   .myteam-me-badge{
     display:inline-block; background:var(--orange); color:#fff; font-size:10.5px; font-weight:800;
     padding:2px 7px; border-radius:10px; margin-left:4px; vertical-align:middle;
   }
-  .myteam-rank-value{ font-size:14.5px; font-weight:800; color:var(--orange-deep); white-space:nowrap; }
+  .myteam-rank-values{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-left:38px; }
+  .myteam-value-col{ display:flex; flex-direction:column; gap:2px; }
+  .myteam-value-col .vlabel{ font-size:11px; color:var(--sub); font-weight:700; }
+  .myteam-value-col .vamt{ font-size:14.5px; font-weight:800; color:var(--orange-deep); white-space:nowrap; }
 
   .tip-card{
     background: var(--orange-tint);
@@ -987,6 +996,12 @@ const CONFIG = {
       panel.innerHTML = '<div class="empty-tab">순위 기준 항목(' + escapeHtml(CONFIG.teamRanking.rankingMatch) + ')을 찾을 수 없습니다. 스텝에게 문의해주세요.</div>';
       return;
     }
+    var secIdx = -1;
+    if (CONFIG.teamRanking.secondaryMatch){
+      for (var j = 0; j < src.headers.length; j++){
+        if (src.headers[j].indexOf(CONFIG.teamRanking.secondaryMatch) !== -1){ secIdx = j; break; }
+      }
+    }
 
     var isSpecialTeam = String(team) === String(CONFIG.teamRanking.specialTeamCode);
 
@@ -1000,7 +1015,13 @@ const CONFIG = {
       } else {
         if (String(row.team) !== String(team) || String(row.branch) !== String(branch)) return;
       }
-      members.push({ code: code, name: row.name || code, value: row.values[colIdx] || 0 });
+      members.push({
+        code: code,
+        name: row.name || code,
+        month: row.month,
+        value: row.values[colIdx] || 0,
+        secondaryValue: secIdx === -1 ? null : (row.values[secIdx] || 0)
+      });
     });
     members.sort(function(a, b){ return b.value - a.value; });
 
@@ -1015,10 +1036,16 @@ const CONFIG = {
     members.forEach(function(m, idx){
       var rank = idx + 1;
       var isMe = normCode(m.code) === myCode;
+      var monthText = (m.month === '' || m.month == null) ? '' : (' <span class="myteam-month">' + escapeHtml(m.month) + '차월</span>');
       html += '<div class="myteam-rank-item' + (isMe ? ' me' : '') + '">' +
+        '<div class="myteam-rank-top">' +
         '<span class="myteam-rank-num rank' + rank + '">' + rank + '</span>' +
-        '<span class="myteam-rank-name">' + escapeHtml(m.name) + (isMe ? ' <span class="myteam-me-badge">나</span>' : '') + '</span>' +
-        '<span class="myteam-rank-value">' + fmt(m.value) + '원</span>' +
+        '<span class="myteam-rank-name">' + escapeHtml(m.name) + monthText + (isMe ? ' <span class="myteam-me-badge">나</span>' : '') + '</span>' +
+        '</div>' +
+        '<div class="myteam-rank-values">' +
+        '<div class="myteam-value-col"><span class="vlabel">' + escapeHtml(CONFIG.teamRanking.rankingLabel) + '</span><span class="vamt">' + fmt(m.value) + '원</span></div>' +
+        '<div class="myteam-value-col"><span class="vlabel">' + escapeHtml(CONFIG.teamRanking.secondaryLabel || '환산실적') + '</span><span class="vamt">' + (m.secondaryValue == null ? '-' : fmt(m.secondaryValue) + '원') + '</span></div>' +
+        '</div>' +
         '</div>';
     });
     html += '</div>';
