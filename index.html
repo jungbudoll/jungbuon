@@ -37,6 +37,8 @@ const CONFIG = {
   // 1) 상단 안내 문구 (배지에 표시되는 이번 주차 문구 — 매주 교체 권장)
   title: "중부지역단",
   subtitle: "10월 2주차 시책 진행중",
+  // 결과 화면 합산 카드 제목 앞에 붙는 현재 주차 (예: "2주차 나의 총 예상 시상") — 주차가 바뀌면 같이 교체
+  weekLabel: "2주차",
 
   // 2) 실적 데이터 파일 (스텝이 매일 아침 이 파일만 새 실적으로 교체하면 됩니다)
   dataFile: "data.xlsx",
@@ -1517,7 +1519,7 @@ const CONFIG = {
     var totalCash = bumunResult.cashTotal + jiyeokdanResult.cashTotal;
     var totalGoods = bumunResult.goods.concat(jiyeokdanResult.goods);
     document.getElementById('totalWrap').innerHTML = summaryHtml(
-      '🏆 나의 총 예상 시상 (부문 + 지역단 합산)', totalCash, totalGoods,
+      '🏆 ' + CONFIG.weekLabel + ' 나의 총 예상 시상 (부문 + 지역단 합산)', totalCash, totalGoods,
       [['부문시상 현금', bumunResult.cashTotal], ['지역단시상 현금', jiyeokdanResult.cashTotal]], true
     );
 
