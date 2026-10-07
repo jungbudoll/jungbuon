@@ -123,22 +123,26 @@ const CONFIG = {
       tabLabel: "지역단시상",
       // G/H열(당월 인보험실적, 당월 환산실적)은 지역단시상 자체 시상 항목이 아니라
       // MY팀 현황 순위 계산에만 쓰이는 값이라 이 탭 화면에서는 숨깁니다.
-      hiddenColumns: ["당월 인보험", "환산"],
-      // ※ 한 열(2주차 인보험실적)에 시상 항목이 2개(선착순 물품 + 권역 순위)라서 같은 match를 두 번 씁니다.
-      //   type "unit_goods"  : 실적 unitAmount마다 물품 1개씩, 최대 maxUnits개 (선착순 한정 수량은 안내 문구로만 표시)
+      hiddenColumns: ["당월 인보험", "환산", "이불"],
+      // ※ type "goods_result" : 이미 마감된 선착순 물품시상. 엑셀에서 스텝이 계산해 둔 세트 수를 그대로 보여줍니다.
+      //     match     : 선착순시상 인보험 실적 열(I열) 헤더에 들어있는 글자 — 헤더에 setsMatch 글자는 넣지 마세요
+      //     setsMatch : 이불 세트 수 열(J열) 헤더에 들어있는 글자 — 헤더에 match 글자는 넣지 마세요
+      //     minForGoods : 이 실적 이상인데 세트 수가 0이면 "선착순 마감으로 지급 대상 아님"이라고 안내
+      //   type "unit_goods"  : (진행 중인 선착순 시상용) 실적 unitAmount마다 물품 1개씩, 최대 maxUnits개
       //   type "region_rank" : minValue 이상 달성자 중 권역(CONFIG.regions) 내 실적 순위 topN위까지 물품 지급
+      //                        (2주차 인보험실적 열 기준으로 계속 진행 중)
       items: [
         {
-          match: "2주차 인보험",
-          title: "선착순 물품시상",
+          match: "선착순",
+          setsMatch: "이불",
+          title: "선착순 물품시상 (마감)",
           emoji: "🛏️",
-          type: "unit_goods",
+          type: "goods_result",
           unit: "원",
-          unitAmount: 100000,
-          maxUnits: 3,
+          minForGoods: 100000,
           goodsName: "사계절 차렵이불Q+베개세트(2EA)",
           goodsUnit: "세트",
-          note: "2주차 선착순 행운시상 기간 : 10/3(토)~10/8(목) · 인보험 구간 실적 10만원당 사계절 차렵이불Q+베개세트(2EA) 1세트 (선착순 100개 · 인당 3개 한도) · 물품재고 부족 시 동일가격 유사상품 대체가능"
+          note: "2주차 선착순 행운시상(종료) : 인보험 구간 실적 10만원당 사계절 차렵이불Q+베개세트(2EA) 1세트 (선착순 100개 · 인당 3개 한도) · 선착순 마감으로 지급 세트 수가 확정되었습니다 · 물품재고 부족 시 동일가격 유사상품 대체가능"
         },
         {
           match: "2주차 인보험",
@@ -150,7 +154,7 @@ const CONFIG = {
           topN: 3,
           goodsName: "순금 0.3g",
           goodsUnit: "개",
-          note: "권역별 순위시상 : 인보험 구간 30만원 이상자 중 권역(천안·평택·서산)별 1~3위에게 순금 0.3g 지급 · 선착순 물품시상과 중복지급 · 동점 시 공동 순위"
+          note: "권역별 순위시상 : 2주차 인보험 구간 30만원 이상자 중 권역(천안·평택·서산)별 1~3위에게 순금 0.3g 지급 · 10/8(목)까지 진행 · 선착순 물품시상과 중복지급 · 동점 시 공동 순위"
         }
       ]
     }
@@ -738,7 +742,7 @@ const CONFIG = {
                   <td rowspan="2" class="hl">10/3(토)<br>~<br>10/8(목)</td>
                   <td>구간 人 실적<br><b>10만원당</b><br>선착순 100개</td>
                   <td class="amt">사계절 차렵이불Q<br>+ 베개세트(2EA)</td>
-                  <td>인당<br>3개한도</td>
+                  <td>인당<br>3개한도<br><b>선착순 마감</b></td>
                 </tr>
                 <tr>
                   <td>구간 <b>30만원</b><br>순위시상</td>
@@ -1047,6 +1051,20 @@ const CONFIG = {
           goodsName: cfg.goodsName, goodsUnit: cfg.goodsUnit,
           remain: units >= cfg.maxUnits ? 0 : (cfg.unitAmount * (units + 1) - value), note: cfg.note
         });
+      } else if (cfg.type === 'goods_result'){
+        anyTier = true;
+        var setsIdx = -1;
+        for (var si = 0; si < mainSheetData.headers.length; si++){
+          if (mainSheetData.headers[si].indexOf(cfg.setsMatch) !== -1){ setsIdx = si; break; }
+        }
+        var setsRaw = (setsIdx === -1 || !mainRecord) ? 0 : Number(mainRecord.values[setsIdx]);
+        var sets = (isFinite(setsRaw) && setsRaw > 0) ? Math.floor(setsRaw) : 0;
+        addGoods(cfg.goodsName, sets, cfg.goodsUnit, false);
+        items.push({
+          configured:true, type:'goods_result', emoji: cfg.emoji, label: cfg.title || headerText || cfg.match,
+          value: value, unit: cfg.unit, sets: sets, minForGoods: cfg.minForGoods,
+          goodsName: cfg.goodsName, goodsUnit: cfg.goodsUnit, note: cfg.note
+        });
       } else if (cfg.type === 'region_rank'){
         anyTier = true;
         var myBranch = mainRecord ? mainRecord.branch : '';
@@ -1254,6 +1272,17 @@ const CONFIG = {
           }
           html += '<div class="detail-foot">※ 선착순 100개 한정 · 재고 소진 시 마감되거나 동일가격 유사상품으로 대체될 수 있어요.</div></div>';
         }
+      } else if (it.type === 'goods_result'){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + it.sets + escapeHtml(it.goodsUnit) + '</span></div>' +
+          '<div class="detail-sub">' + escapeHtml(it.goodsName) + '<br>선착순시상 인보험 실적 ' + fmt(it.value) + it.unit + '</div>';
+        if (it.sets > 0){
+          html += '<div class="detail-tip done">🎉 ' + it.sets + escapeHtml(it.goodsUnit) + ' 지급 대상이에요 (선착순 마감 · 확정)</div>';
+        } else if (it.value >= it.minForGoods){
+          html += '<div class="detail-tip warn">선착순 마감으로 지급 대상이 아니에요</div>';
+        } else {
+          html += '<div class="detail-tip warn">지급 기준(' + fmt(it.minForGoods) + it.unit + ' 이상)에 해당하지 않아 대상이 아니에요</div>';
+        }
+        html += '<div class="detail-foot">※ 선착순 시상은 종료되었으며, 지급 세트 수가 확정되었어요.</div></div>';
       } else if (it.type === 'region_rank'){
         var medal = it.rank === 1 ? '🥇' : it.rank === 2 ? '🥈' : it.rank === 3 ? '🥉' : '';
         var rankText = it.rank ? ((it.sameRank > 0 ? '공동 ' : '') + it.rank + '위') : '';
