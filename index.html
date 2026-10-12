@@ -36,9 +36,9 @@ const CONFIG = {
 
   // 1) 상단 안내 문구 (배지에 표시되는 이번 주차 문구 — 매주 교체 권장)
   title: "중부지역단",
-  subtitle: "10월 2주차 시책 진행중",
+  subtitle: "10월 3주차 시책 진행중",
   // 결과 화면 합산 카드 제목 앞에 붙는 현재 주차 (예: "2주차 나의 총 예상 시상") — 주차가 바뀌면 같이 교체
-  weekLabel: "2주차",
+  weekLabel: "3주차",
 
   // 2) 실적 데이터 파일 (스텝이 매일 아침 이 파일만 새 실적으로 교체하면 됩니다)
   dataFile: "data.xlsx",
@@ -60,20 +60,6 @@ const CONFIG = {
       //    아래 tier_gated 항목들의 게이트(gateMatch) 값으로만 쓰이므로 여기서 숨겨둡니다.
       hiddenColumns: ["10월 2차년도 고하이캡", "10월 2차년도 주력상품"],
       items: [
-        {
-          match: "활동량",
-          emoji: "🙋",
-          type: "tier",
-          unit: "원",
-          tiers: [
-            { amount: 100000, reward: "50,000원", value: 50000, type: "cash" },
-            { amount: 200000, reward: "100,000원", value: 100000, type: "cash" },
-            { amount: 300000, reward: "150,000원", value: 150000, type: "cash" },
-            { amount: 400000, reward: "200,000원", value: 200000, type: "cash" },
-            { amount: 500000, reward: "250,000원", value: 250000, type: "cash" }
-          ],
-          note: "1~2주차 하이플래너 활동량 시상 기간 : 10/1~8(5영업일) · 인보험 실적 기준 · 관리사항 2~7 미적용 · 플래너 직접집행"
-        },
         {
           match: "감사물품",
           emoji: "🍚",
@@ -105,6 +91,7 @@ const CONFIG = {
           emoji: "🎯",
           type: "tier_gated",
           unit: "원",
+          ended: true,   // 기간 종료 — 결과(확정)만 표시
           gateMatch: "10월 2차년도 주력상품",
           gateThreshold: 100000,
           gateLabel: "10월 1~2주차 실적",
@@ -113,7 +100,7 @@ const CONFIG = {
             { amount: 100000, reward: "240,000원", value: 240000, type: "cash" },
             { amount: 200000, reward: "660,000원", value: 660000, type: "cash" }
           ],
-          note: "2차년도 주력상품 브릿지 참여기간 : 9월 4~5주 & 10월 1~2주 · 대상상품 : 퍼펙트플러스, 간편보험, 인생의품격, 굿앤굿1540, 굿앤굿스타 · 9월 구간 달성 + 10월 1~2주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
+          note: "[종료] 2차년도 주력상품 브릿지 참여기간 : 9월 4~5주 & 10월 1~2주 · 대상상품 : 퍼펙트플러스, 간편보험, 인생의품격, 굿앤굿1540, 굿앤굿스타 · 9월 구간 달성 + 10월 1~2주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
         }
       ]
     },
@@ -123,43 +110,27 @@ const CONFIG = {
       tabLabel: "지역단시상",
       // G/H열(당월 인보험실적, 당월 환산실적)은 지역단시상 자체 시상 항목이 아니라
       // MY팀 현황 순위 계산에만 쓰이는 값이라 이 탭 화면에서는 숨깁니다.
-      hiddenColumns: ["당월 인보험", "환산", "이불"],
-      // ※ type "goods_result" : 이미 마감된 선착순 물품시상. 엑셀에서 스텝이 계산해 둔 세트 수를 그대로 보여줍니다.
-      //     match     : 선착순시상 인보험 실적 열(I열) 헤더에 들어있는 글자 — 헤더에 setsMatch 글자는 넣지 마세요
-      //     setsMatch : 이불 세트 수 열(J열) 헤더에 들어있는 글자 — 헤더에 match 글자는 넣지 마세요
-      //     minForGoods : 이 실적 이상인데 세트 수가 0이면 "선착순 마감으로 지급 대상 아님"이라고 안내
-      //   type "unit_goods"  : (진행 중인 선착순 시상용) 실적 unitAmount마다 물품 1개씩, 최대 maxUnits개
-      //   type "region_rank" : minValue 이상 달성자 중 권역(CONFIG.regions) 내 실적 순위 topN위까지 물품 지급
-      //                        (2주차 인보험실적 열 기준으로 계속 진행 중)
+      hiddenColumns: ["당월 인보험", "환산", "이불", "선착순", "활동량"],
+      // ※ type "team_prize" : 영업팀 시상. 같은 지점·팀 전원의 이 열 실적 합계 ÷ 팀목표(팀목표 시트)로 달성률을 계산합니다.
+      //     baseRate 이상 → basePrize 지급 / topRate 이상 + 같은 그룹(구분+그룹) 내 1위 → topPrize 추가
+      //     rankBy: "rate"(달성률 순위) 또는 "amount"(팀 인보험 실적 금액 순위)
       items: [
         {
-          match: "선착순",
-          setsMatch: "이불",
-          title: "선착순 물품시상 (마감)",
-          emoji: "🛏️",
-          type: "goods_result",
+          match: "3주차 인보험",
+          title: "영업팀 시상",
+          emoji: "👥",
+          type: "team_prize",
           unit: "원",
-          minForGoods: 100000,
-          goodsName: "사계절 차렵이불Q+베개세트(2EA)",
-          goodsUnit: "세트",
-          note: "2주차 선착순 행운시상(종료) : 인보험 구간 실적 10만원당 사계절 차렵이불Q+베개세트(2EA) 1세트 (선착순 100개 · 인당 3개 한도) · 선착순 마감으로 지급 세트 수가 확정되었습니다 · 물품재고 부족 시 동일가격 유사상품 대체가능"
-        },
-        {
-          match: "2주차 인보험",
-          title: "권역 순위시상",
-          emoji: "🏅",
-          type: "region_rank",
-          unit: "원",
-          minValue: 300000,
-          topN: 3,
-          goodsName: "순금 0.3g",
-          goodsUnit: "개",
-          note: "권역별 순위시상 : 2주차 인보험 구간 30만원 이상자 중 권역(천안·평택·서산)별 1~3위에게 순금 0.3g 지급 · 10/8(목)까지 진행 · 선착순 물품시상과 중복지급 · 동점 시 공동 순위"
+          baseRate: 0.25,
+          basePrize: 200000,
+          topRate: 0.30,
+          topPrize: 100000,
+          rankBy: "rate",
+          note: "3주차 영업팀 시상 기간 : 10/9(금)~10/16(금) · 영업팀 인보험 구간실적이 팀 목표의 25% 이상이면 20만원 지급, 30% 이상 + 그룹별 1위 시 10만원 추가지급 · 최종 실적 규모차등률 ±30% 차등지급 · 최우수 영업팀 목표 준수"
         }
       ]
     }
   },
-
   // 3-0) 지난 주차 결과 ("지난 주차" 탭에서 주차별로 확인)
   //      - sheetName : 엑셀에 추가한 주차별 시트 이름 (A~E열은 다른 시트와 같고, F열 이후에 그 주차 실적)
   //      - 이 시트가 엑셀에 없으면 해당 주차는 화면에 나오지 않고, 시트가 하나도 없으면 "지난 주차" 탭 자체가 숨겨집니다.
@@ -188,6 +159,42 @@ const CONFIG = {
           note: "1주차 하이플래너 활동량 시상 기간 : 10/1~2(2영업일) · 부문시상 활동량 시상과 별도로 중복 지급 · 관리사항 2~7 미적용 · 플래너 직접집행"
         }
       ]
+    },
+    {
+      key: "w2",
+      label: "2주차",
+      sheetName: "2주차",
+      tabLabel: "2주차 시상",
+      title: "2주차 지역단 행운시상",
+      period: "10/3~10/8 · 종료",
+      // 2주차 시트: F열 2주차 인보험 실적 / G열 선착순시상 인보험 실적 / H열 이불 세트수 / I열 활동량(시상안에서만 안내, 결과 계산 안 함)
+      hiddenColumns: ["활동량", "이불"],
+      items: [
+        {
+          match: "선착순",
+          setsMatch: "이불",
+          title: "선착순 물품시상 (마감)",
+          emoji: "🛏️",
+          type: "goods_result",
+          unit: "원",
+          minForGoods: 100000,
+          goodsName: "사계절 차렵이불Q+베개세트(2EA)",
+          goodsUnit: "세트",
+          note: "2주차 선착순 행운시상(종료) : 인보험 구간 실적 10만원당 사계절 차렵이불Q+베개세트(2EA) 1세트 (선착순 100개 · 인당 3개 한도) · 선착순 마감으로 지급 세트 수가 확정되었습니다 · 물품재고 부족 시 동일가격 유사상품 대체가능"
+        },
+        {
+          match: "2주차 인보험",
+          title: "권역 순위시상",
+          emoji: "🏅",
+          type: "region_rank",
+          unit: "원",
+          minValue: 300000,
+          topN: 3,
+          goodsName: "순금 0.3g",
+          goodsUnit: "개",
+          note: "권역별 순위시상(종료) : 2주차 인보험 구간 30만원 이상자 중 권역(천안·평택·서산)별 1~3위에게 순금 0.3g 지급 · 선착순 물품시상과 중복지급 · 동점 시 공동 순위"
+        }
+      ]
     }
   ],
 
@@ -198,6 +205,10 @@ const CONFIG = {
     { name: "평택권역", branches: ["안성지점", "송탄지점", "서평택지점", "안성중앙지점", "평택지점", "중앙TC지점"] },
     { name: "서산권역", branches: ["보령지점", "홍성지점", "서산현대지점", "당진지점", "내포지점", "서산TC지점", "당진TC지점"] }
   ],
+
+  // 3-2) 영업팀 목표 시트 (영업팀 시상용) — 열 순서: 구분(CPA/TC) | 그룹(A~D) | 지점 | 팀 | 팀장코드 | 팀장명 | 인보험 매출목표(천원)
+  //      구분·그룹 칸이 병합되어 비어 있어도 위 행의 값을 이어 받습니다. 목표는 천원 단위(예: 8,008 → 8,008,000원).
+  teamTarget: { sheetName: "팀목표", unitMultiplier: 1000 },
 
   // 4) 비고 문구
   calcNote: "(위 구간표는 예시 값이 포함되어 있을 수 있습니다. 실제 시상은 회사 최종 확정 기준을 따릅니다)",
@@ -641,42 +652,30 @@ const CONFIG = {
         <div class="rules-cat">부문시상</div>
 
         <div class="rules-block">
-          <div class="rules-block-title">1. 1~2주차 하이플래너 활동량 시상</div>
+          <div class="rules-block-title">1. 퍼펙트 케어 활동량 시상 (1억 한도 / 新 퍼펙트 플러스 개정 준비용)</div>
           <div class="table-scroll">
             <table class="rules-table">
-              <thead><tr><th>기간</th><th>금액기준</th><th>시상 (약 50%)</th></tr></thead>
+              <thead><tr><th>기준</th><th>기간</th><th>지급률</th></tr></thead>
               <tbody>
-                <tr><td rowspan="5">10/1~8<br>(5영업일)</td><td>人 50만 ↑</td><td class="amt">현금 25만원</td></tr>
-                <tr><td>人 40만 ↑</td><td class="amt">현금 20만원</td></tr>
-                <tr><td>人 30만 ↑</td><td class="amt">현금 15만원</td></tr>
-                <tr><td>人 20만 ↑</td><td class="amt">현금 10만원</td></tr>
-                <tr><td>人 10만 ↑</td><td class="amt">현금 5만원</td></tr>
+                <tr>
+                  <td rowspan="3">부문전체<br>퍼펙트 케어<br><b>月 1억 한도</b><br><span class="pct">(소진 시 시상조기 종료)</span></td>
+                  <td>1주차<br>(10/1~10/2)</td>
+                  <td class="amt">10% 정률 소급지급</td>
+                </tr>
+                <tr><td>2주차<br>(10/3~10/8)</td><td class="amt">30% 정률 소급지급</td></tr>
+                <tr><td>3주차<br>(10/12~10/16)</td><td class="amt">100% 정률</td></tr>
               </tbody>
             </table>
           </div>
           <ul class="rules-notes">
-            <li>관리사항 2~7 미적용</li>
-            <li>플래너 직접집행</li>
+            <li>『퍼펙트 케어간병』+ 개정 후 新 『퍼펙트 플러스』 유입 목적 (개정 전, 기가입 상품 확대하여 New 납입지원 특약효과(누적제외 진단금) 극대화)</li>
+            <li>1, 2주차는 부문 기본시상 및 활동량 50% 추가시상에 대한 역시상을 방지하고자 차익분을 소급하여 지급합니다.</li>
+            <li>플래너 직접집행 / 관리사항 2~7 미적용</li>
           </ul>
         </div>
 
         <div class="rules-block">
-          <div class="rules-block-title">2. 하이플래너 감사물품 지급 : 【현대해상을 지탱하는 든든한 밥심! 저희가 채워드립니다!】</div>
-          <div class="table-scroll">
-            <table class="rules-table">
-              <thead><tr><th>기간</th><th>기준</th><th>지급품</th></tr></thead>
-              <tbody><tr><td>~10/16(금)</td><td>유실적 기본활동*</td><td class="amt">2026년 햅쌀 10kg<br><span class="pct">(아산 맑은 쌀)</span></td></tr></tbody>
-            </table>
-          </div>
-          <ul class="rules-notes">
-            <li>유실적 활동 : 가입설계 10건 ↑ &amp; 신규 설계등의 5건 ↑ &amp; 인보험 5만원 ↑ 참여</li>
-            <li>주소지 취합 후, 자택배송 예정입니다.</li>
-            <li>관리사항 2~7 미적용</li>
-          </ul>
-        </div>
-
-        <div class="rules-block">
-          <div class="rules-block-title">3. 2차년도 고하이캡 시책_플래너 직접배정</div>
+          <div class="rules-block-title">2. 2차년도 고하이캡 시책_플래너 직접배정</div>
           <div class="table-scroll">
             <table class="rules-table">
               <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 3~5주차</th><th>10월 1~3주차</th><th>2차년도 시상금</th></tr></thead>
@@ -696,7 +695,7 @@ const CONFIG = {
           </div>
           <ul class="rules-notes">
             <li>9월 3~5주차 : 9월 14일 ~ 9월 마감일 / 10월 1~3주차 : 10월 1일 ~ 10월 16일</li>
-            <li>10월 1일 신계약부터 『인생의 품격』통합사망 3천만 부보조건 삭제 : 통합사망 미부보 계약도 하이캡 17배 이상 시 상기사상 (9월 3~5주차는 9월 시상안내로 『인생의 품격』 3천만 부보 사망조건 적용)</li>
+            <li>10월 1일 신계약분부터 『인생의 품격』통합사망 3천만 부보조건 삭제 : 통합사망 미부보 계약도 하이캡 17배 이상 시 상기시상 적용 (9월 3~5주차는 9월 시상안내로 『인생의 품격』 3천만 부보 사망조건 적용)</li>
             <li>신계약 체결 후, 이관된 계약은 시상제외</li>
             <li>장기하이캡 배수는 소수점 둘째자리에서 반올림</li>
             <li>관리사항 1~7적용</li>
@@ -704,7 +703,22 @@ const CONFIG = {
         </div>
 
         <div class="rules-block">
-          <div class="rules-block-title">4. 2차년도 주력상품 시책_플래너 직접배정 (지급률 상향)</div>
+          <div class="rules-block-title">3. 하이플래너 감사물품 지급 : 【현대해상을 지탱하는 든든한 밥심! 저희가 채워드립니다!】</div>
+          <div class="table-scroll">
+            <table class="rules-table">
+              <thead><tr><th>기간</th><th>기준</th><th>지급품</th></tr></thead>
+              <tbody><tr><td>~10/16(금)</td><td>유실적 기본활동*</td><td class="amt">2026년 햅쌀 10kg<br><span class="pct">(아산 맑은 쌀)</span></td></tr></tbody>
+            </table>
+          </div>
+          <ul class="rules-notes">
+            <li>유실적 활동 : 가입설계 10건 ↑ &amp; 신규 설계등록 5건 ↑ &amp; 인보험 5만원 ↑ 참여</li>
+            <li>주소지 취합 후, 자택배송 예정입니다.</li>
+            <li>관리사항 2~7 미적용</li>
+          </ul>
+        </div>
+
+        <div class="rules-block">
+          <div class="rules-block-title">4. 2차년도 주력상품 시책_플래너 직접배정 (종료)</div>
           <div class="table-scroll">
             <table class="rules-table">
               <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 4~5주차</th><th>10월 1주차</th><th>2차년도 시상금</th></tr></thead>
@@ -722,10 +736,10 @@ const CONFIG = {
             </table>
           </div>
           <ul class="rules-notes">
+            <li>기간 종료 — 결과만 확인할 수 있어요.</li>
             <li>9월 4~5주차 : 9월 21일 ~ 9월 마감일 / 10월 1~2주차 : 10월 1일 ~ 10월 8일</li>
-            <li>신계약 체결 후, 이관된 계약은 시상제외</li>
             <li>주력상품 : 퍼펙트플러스 + 간편보험 + 인생의 품격 + 굿앤굿 1540 + 굿앤굿 스타 (연납기, 세납기 전체, 하이캡 무관)</li>
-            <li>관리사항 1~7적용</li>
+            <li>신계약 체결 후, 이관된 계약은 시상제외 / 관리사항 1~7적용</li>
           </ul>
         </div>
       </div>
@@ -733,31 +747,26 @@ const CONFIG = {
       <div class="rules-group">
         <div class="rules-cat">지역단시상</div>
         <div class="rules-block">
-          <div class="rules-block-title">26.10월 중부지역단 2주차 『선착순 행운시상』</div>
+          <div class="rules-block-title">중부지역단 10월 3주차 팀시상</div>
           <div class="table-scroll">
             <table class="rules-table">
-              <thead><tr><th>기간</th><th>시상조건</th><th>시상품</th><th>비고</th></tr></thead>
+              <thead><tr><th>기간</th><th>구분</th><th>지급조건</th><th>① 기본</th><th>② 추가</th></tr></thead>
               <tbody>
                 <tr>
-                  <td rowspan="2" class="hl">10/3(토)<br>~<br>10/8(목)</td>
-                  <td>구간 人 실적<br><b>10만원당</b><br>선착순 100개</td>
-                  <td class="amt">사계절 차렵이불Q<br>+ 베개세트(2EA)</td>
-                  <td>인당<br>3개한도<br><b>선착순 마감</b></td>
-                </tr>
-                <tr>
-                  <td>구간 <b>30만원</b><br>순위시상</td>
-                  <td class="amt">권역별 1~3위<br>순금 0.3g</td>
-                  <td>선착순시상과<br>중복지급</td>
+                  <td class="hl">10/9(금)<br>~<br>10/16(금)</td>
+                  <td>중부지역단<br>영업팀<br>(지역팀포함)</td>
+                  <td>영업팀별<br>인보험 구간<br><b>25% ↑</b></td>
+                  <td class="amt">구간 25% ↑<br>20만원 지급</td>
+                  <td class="amt">구간 30% ↑<br>&amp; 그룹별 1위<br>10만원 추가지급</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <ul class="rules-notes">
-            <li>시상대상 : 중부지역단 소속 플래너</li>
-            <li>물품재고 부족 시, 동일가격 유사상품 대체가능</li>
-            <li>순위시상 권역 구분 - 천안권역 : 천안지점, 천안중앙지점, 천안TC지점, 천안신화지점, 새천안TC지점, 중부TC지점</li>
-            <li>평택권역 : 안성지점, 송탄지점, 서평택지점, 안성중앙지점, 평택지점, 중앙TC지점</li>
-            <li>서산권역 : 보령지점, 홍성지점, 서산현대지점, 당진지점, 내포지점, 서산TC지점, 당진TC지점</li>
+            <li>최종 실적 규모차등률 ±30% 차등지급</li>
+            <li>최우수 영업팀 목표 준수</li>
+            <li>예시) 지역단 팀 전체 평균실적 500천원 기준 ▶ 800천원 &amp; 27% 목표 달성 시, 20만원 × 130% = 260천원</li>
+            <li>팀 목표(10월 인보험 매출목표)는 그룹(CPA/TC · A~D)별로 설정되어 있으며, 아래 코드 조회 후 지역단시상 탭에서 우리 팀 달성률과 그룹 내 순위를 확인할 수 있어요.</li>
           </ul>
         </div>
       </div>
@@ -905,6 +914,36 @@ const CONFIG = {
   }
 
   // "팀장" 시트(지점 | 팀 | 팀장코드)를 읽어 팀장 코드 집합을 만듭니다. 시트가 없으면 빈 Set을 반환합니다.
+  // 팀 번호를 "02" 형태로 통일 (엑셀에서 2 / "02" 어느 쪽으로 들어와도 같은 팀으로 인식)
+  function normTeam(v){
+    var s = String(v == null ? '' : v).trim().toUpperCase();
+    return /^\d+$/.test(s) ? s.padStart(2, '0') : s;
+  }
+  function teamKey(branch, team){ return String(branch == null ? '' : branch).trim() + '|' + normTeam(team); }
+
+  // "팀목표" 시트 → { "지점|팀": {division, group, branch, team, leaderCode, leaderName, target(원)} }. 시트가 없으면 null
+  function parseTeamTargetSheet(wb, sheetName){
+    var ws = wb.Sheets[sheetName];
+    if (!ws) return null;
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    var out = {}, division = '', group = '';
+    for (var i = 1; i < rows.length; i++){
+      var r = rows[i];
+      if (!r || r.length === 0) continue;
+      if (String(r[0]).trim()) division = String(r[0]).trim();
+      if (String(r[1]).trim()) group = String(r[1]).trim();
+      var branch = String(r[2] == null ? '' : r[2]).trim();
+      var target = Number(String(r[6] == null ? '' : r[6]).replace(/,/g, ''));
+      if (!branch || !String(r[3]).trim() || !(target > 0)) continue;
+      out[teamKey(branch, r[3])] = {
+        division: division, group: group, branch: branch, team: normTeam(r[3]),
+        leaderCode: normCode(r[4]), leaderName: String(r[5] == null ? '' : r[5]).trim(),
+        target: target * (CONFIG.teamTarget.unitMultiplier || 1)
+      };
+    }
+    return out;
+  }
+
   function parseLeaderSheet(wb, sheetName){
     var ws = wb.Sheets[sheetName];
     var leaders = new Set();
@@ -971,7 +1010,8 @@ const CONFIG = {
           var parsedPast = parseSheet(wb, pw.sheetName);
           if (parsedPast) past[pw.key] = parsedPast;
         });
-        workbookData = { bumun: bumun, jiyeokdan: jiyeokdan, leaders: leaders, verify: verify, past: past };
+        var teamTargets = parseTeamTargetSheet(wb, CONFIG.teamTarget.sheetName);
+        workbookData = { bumun: bumun, jiyeokdan: jiyeokdan, leaders: leaders, verify: verify, past: past, teamTargets: teamTargets };
         loadFailed = false;
         document.getElementById('loadingBox').classList.remove('show');
         document.getElementById('inputCard').style.display = '';
@@ -1065,6 +1105,61 @@ const CONFIG = {
           value: value, unit: cfg.unit, sets: sets, minForGoods: cfg.minForGoods,
           goodsName: cfg.goodsName, goodsUnit: cfg.goodsUnit, note: cfg.note
         });
+      } else if (cfg.type === 'team_prize'){
+        // 영업팀 시상은 팀 단위 지급이라 개인 합산(cashTotal)에는 넣지 않고 카드로만 보여줍니다.
+        var tts = workbookData.teamTargets;
+        var tp = { configured:true, type:'team_prize', emoji: cfg.emoji, label: cfg.title || headerText || cfg.match,
+                   unit: cfg.unit, note: cfg.note, status: tts ? 'noTeam' : 'noData',
+                   baseRate: cfg.baseRate, basePrize: cfg.basePrize, topRate: cfg.topRate, topPrize: cfg.topPrize };
+        var myTeam = tts ? tts[teamKey(mainRecord.branch, mainRecord.team)] : null;
+        if (myTeam){
+          var teamSums = {};
+          Object.keys(mainSheetData.rowsByCode).forEach(function(code){
+            var row = mainSheetData.rowsByCode[code];
+            var k = teamKey(row.branch, row.team);
+            teamSums[k] = (teamSums[k] || 0) + (row.values[colIdx] || 0);
+          });
+          var scoreOf = function(t){
+            var s = teamSums[teamKey(t.branch, t.team)] || 0;
+            return cfg.rankBy === 'amount' ? s : s / t.target;
+          };
+          var mySum = teamSums[teamKey(myTeam.branch, myTeam.team)] || 0;
+          var myScore = scoreOf(myTeam), higherT = 0, equalT = 0, groupSize = 0;
+          Object.keys(tts).forEach(function(k){
+            var t = tts[k];
+            if (t.division !== myTeam.division || t.group !== myTeam.group) return;
+            groupSize++;
+            if (t === myTeam) return;
+            var sc = scoreOf(t);
+            if (sc > myScore) higherT++; else if (sc === myScore) equalT++;
+          });
+          var myRate = mySum / myTeam.target;
+          var baseOk = myRate >= cfg.baseRate;
+          var topOk = myRate >= cfg.topRate && higherT === 0;
+          tp.status = 'ok';
+          tp.team = myTeam; tp.sum = mySum; tp.rate = myRate;
+          tp.rank = higherT + 1; tp.sameRank = equalT; tp.groupSize = groupSize;
+          tp.baseOk = baseOk; tp.topOk = topOk;
+          tp.prize = (baseOk ? cfg.basePrize : 0) + (topOk ? cfg.topPrize : 0);
+          tp.baseRemain = Math.max(0, Math.ceil(myTeam.target * cfg.baseRate - mySum));
+          tp.topRemain = Math.max(0, Math.ceil(myTeam.target * cfg.topRate - mySum));
+          // 팀장(팀장 시트 또는 팀목표 시트의 팀장코드)이면 우리 팀원 전체의 현재 실적을 순위순으로 제공
+          var meCode = normCode(mainRecord.code);
+          if ((workbookData.leaders && workbookData.leaders.has(meCode)) || myTeam.leaderCode === meCode){
+            var myKey2 = teamKey(myTeam.branch, myTeam.team);
+            var mem = [];
+            Object.keys(mainSheetData.rowsByCode).forEach(function(code){
+              var row = mainSheetData.rowsByCode[code];
+              if (teamKey(row.branch, row.team) !== myKey2) return;
+              mem.push({ code: code, name: row.name, month: row.month, value: row.values[colIdx] || 0, me: code === meCode });
+            });
+            mem.sort(function(a, b){ return b.value - a.value; });
+            var prevV = null, prevR = 0;
+            mem.forEach(function(m, i){ m.rank = (m.value === prevV) ? prevR : i + 1; prevV = m.value; prevR = m.rank; });
+            tp.members = mem;
+          }
+        }
+        items.push(tp);
       } else if (cfg.type === 'region_rank'){
         anyTier = true;
         var myBranch = mainRecord ? mainRecord.branch : '';
@@ -1109,7 +1204,7 @@ const CONFIG = {
         var finalAchieved = (gateAchieved && tg) ? tg : null;
         if (finalAchieved){ if (finalAchieved.type === 'cash') cashTotal += finalAchieved.value; else addGoods(finalAchieved.reward, 1, '', false); }
         items.push({
-          configured:true, type:'tier_gated', emoji: cfg.emoji, label: headerText || cfg.match,
+          configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended,
           value: value, unit: cfg.unit, tierRaw: tg, tierAchieved: finalAchieved, tierNext: ntg,
           gateValue: gateValue, gateThreshold: cfg.gateThreshold, gateAchieved: gateAchieved,
           gateLabel: cfg.gateLabel || '10월 실적', gateAchievedText: cfg.gateAchievedText, note: cfg.note
@@ -1283,6 +1378,37 @@ const CONFIG = {
           html += '<div class="detail-tip warn">지급 기준(' + fmt(it.minForGoods) + it.unit + ' 이상)에 해당하지 않아 대상이 아니에요</div>';
         }
         html += '<div class="detail-foot">※ 선착순 시상은 종료되었으며, 지급 세트 수가 확정되었어요.</div></div>';
+      } else if (it.type === 'team_prize'){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.status === 'ok' ? fmt(it.prize) + '원' : '-') + '</span></div>';
+        if (it.status === 'noData'){
+          html += '<div class="detail-tip warn">영업팀 목표 정보를 불러오지 못했어요. 스텝에게 문의해주세요.</div>';
+        } else if (it.status === 'noTeam'){
+          html += '<div class="detail-sub">소속 팀이 영업팀 시상 대상(10월 인보험 목표 설정 팀)이 아니에요.</div>';
+        } else {
+          var tm = it.team, pct = function(x){ return (Math.floor(x * 1000) / 10).toFixed(1) + '%'; };
+          html += '<div class="detail-sub">' + escapeHtml(tm.branch) + ' ' + escapeHtml(tm.team) + '팀 · ' + escapeHtml(tm.division) + ' ' + escapeHtml(tm.group) + '그룹<br>' +
+            '팀 인보험 실적 ' + fmt(it.sum) + it.unit + ' / 목표 ' + fmt(tm.target) + it.unit + ' (달성률 <b>' + pct(it.rate) + '</b>)<br>' +
+            '그룹 내 ' + (it.sameRank > 0 ? '공동 ' : '') + it.rank + '위 (' + it.groupSize + '팀 중)</div>';
+          if (!it.baseOk){
+            html += '<div class="detail-tip">팀 실적이 ' + fmt(it.baseRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.baseRate * 100) + '%가 되면 ' + fmt(it.basePrize) + '원 지급!</div>';
+          } else if (it.topOk){
+            html += '<div class="detail-tip done">🎉 기본 ' + fmt(it.basePrize) + '원 + 그룹 1위 추가 ' + fmt(it.topPrize) + '원 = ' + fmt(it.prize) + '원 지급 예상!</div>';
+          } else if (it.rate >= it.topRate){
+            html += '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 그룹 1위가 되면 ' + fmt(it.topPrize) + '원이 추가돼요.</div>';
+          } else {
+            html += '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 팀 실적이 ' + fmt(it.topRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.topRate * 100) + '%가 되고 그룹 1위가 되면 ' + fmt(it.topPrize) + '원 추가!</div>';
+          }
+        }
+        if (it.members && it.members.length){
+          html += '<div class="detail-sub" style="margin-top:10px;"><b>👑 우리 팀원 현재 구간 실적 (실적순)</b></div><div style="margin-top:6px;">';
+          it.members.forEach(function(m){
+            html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 4px;border-top:1px solid rgba(128,128,128,.2);font-size:13px;' + (m.me ? 'font-weight:800;' : '') + '">' +
+              '<span>' + m.rank + '위 ' + escapeHtml(m.name) + (m.month !== '' && m.month != null ? ' <span style="opacity:.6">(' + escapeHtml(m.month) + '차월)</span>' : '') + (m.me ? ' · 나' : '') + '</span>' +
+              '<span>' + fmt(m.value) + it.unit + '</span></div>';
+          });
+          html += '</div>';
+        }
+        html += '<div class="detail-foot">※ 영업팀 단위 시상이라 위 개인 합산 시상금에는 포함되지 않아요 · 최종 실적 규모차등률 ±30% 차등지급</div></div>';
       } else if (it.type === 'region_rank'){
         var medal = it.rank === 1 ? '🥇' : it.rank === 2 ? '🥈' : it.rank === 3 ? '🥉' : '';
         var rankText = it.rank ? ((it.sameRank > 0 ? '공동 ' : '') + it.rank + '위') : '';
@@ -1309,7 +1435,9 @@ const CONFIG = {
           '<div class="detail-sub">9월 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + fmt(it.gateValue) + it.unit + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
         if (!it.gateAchieved){
           var gRemain = Math.max(0, it.gateThreshold - it.gateValue);
-          html += '<div class="detail-tip">' + fmt(gRemain) + it.unit + '만큼 더 채워야 시상금이 최종 지급됩니다.</div>';
+          html += it.ended
+            ? '<div class="detail-tip warn">10월 실적 기준(' + fmt(it.gateThreshold) + it.unit + ' 이상) 미달로 지급 대상이 아니에요 (기간 종료)</div>'
+            : '<div class="detail-tip">' + fmt(gRemain) + it.unit + '만큼 더 채워야 시상금이 최종 지급됩니다.</div>';
         } else if (gAchieved){
           html += '<div class="detail-tip done">9월 달성 구간 + ' + escapeHtml(it.gateAchievedText || it.gateLabel) + '! 🎉</div>';
         } else {
