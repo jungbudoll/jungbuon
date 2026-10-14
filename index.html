@@ -61,6 +61,15 @@ const CONFIG = {
       hiddenColumns: ["10월 2차년도 고하이캡", "10월 2차년도 주력상품"],
       items: [
         {
+          match: "퍼펙트",   // K열 "퍼펙트케어활동량시상실적" (3주차 실적만 입력) — 헤더에 "퍼펙트"가 들어가면 인식
+          title: "퍼펙트 케어 활동량 시상",
+          emoji: "🙋",
+          type: "rate_cash",
+          unit: "원",
+          rate: 1.0,
+          note: "3주차 퍼펙트 케어 활동량 시상 : 10/12~10/16 · 3주차 실적의 100% 정률 지급 · 부문전체 月 1억 한도(소진 시 시상조기 종료) · 플래너 직접집행 · 관리사항 2~7 미적용"
+        },
+        {
           match: "감사물품",
           emoji: "🍚",
           type: "threshold",
@@ -1105,6 +1114,14 @@ const CONFIG = {
           value: value, unit: cfg.unit, sets: sets, minForGoods: cfg.minForGoods,
           goodsName: cfg.goodsName, goodsUnit: cfg.goodsUnit, note: cfg.note
         });
+      } else if (cfg.type === 'rate_cash'){
+        anyTier = true;
+        var rcAmount = Math.floor(value * cfg.rate);
+        cashTotal += rcAmount;
+        items.push({
+          configured:true, type:'rate_cash', emoji: cfg.emoji, label: cfg.title || headerText || cfg.match,
+          value: value, unit: cfg.unit, rate: cfg.rate, amount: rcAmount, note: cfg.note
+        });
       } else if (cfg.type === 'team_prize'){
         // 영업팀 시상은 팀 단위 지급이라 개인 합산(cashTotal)에는 넣지 않고 카드로만 보여줍니다.
         var tts = workbookData.teamTargets;
@@ -1378,6 +1395,13 @@ const CONFIG = {
           html += '<div class="detail-tip warn">지급 기준(' + fmt(it.minForGoods) + it.unit + ' 이상)에 해당하지 않아 대상이 아니에요</div>';
         }
         html += '<div class="detail-foot">※ 선착순 시상은 종료되었으며, 지급 세트 수가 확정되었어요.</div></div>';
+      } else if (it.type === 'rate_cash'){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + fmt(it.amount) + '원</span></div>' +
+          '<div class="detail-sub">3주차 실적 ' + fmt(it.value) + it.unit + ' × 지급률 ' + Math.round(it.rate * 100) + '%</div>' +
+          (it.amount > 0
+            ? '<div class="detail-tip done">' + fmt(it.amount) + '원 지급 예상! 🎉</div>'
+            : '<div class="detail-tip">실적이 쌓이는 만큼 100% 정률로 지급돼요.</div>') +
+          '<div class="detail-foot">※ 부문 전체 月 1억 한도 · 소진 시 시상 조기 종료</div></div>';
       } else if (it.type === 'team_prize'){
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.status === 'ok' ? fmt(it.prize) + '원' : '-') + '</span></div>';
         if (it.status === 'noData'){
