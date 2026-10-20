@@ -36,9 +36,9 @@ const CONFIG = {
 
   // 1) 상단 안내 문구 (배지에 표시되는 이번 주차 문구 — 매주 교체 권장)
   title: "중부지역단",
-  subtitle: "10월 3주차 시책 진행중",
+  subtitle: "10월 4~5주차 시책 진행중",
   // 결과 화면 합산 카드 제목 앞에 붙는 현재 주차 (예: "2주차 나의 총 예상 시상") — 주차가 바뀌면 같이 교체
-  weekLabel: "3주차",
+  weekLabel: "4주차",
 
   // 2) 실적 데이터 파일 (스텝이 매일 아침 이 파일만 새 실적으로 교체하면 됩니다)
   dataFile: "data.xlsx",
@@ -55,61 +55,56 @@ const CONFIG = {
     bumun: {
       sheetName: "부문시상",
       tabLabel: "부문시상",
-      // 엑셀에는 남아있지만 이번 주 시상 대상에서 제외된 열 (헤더 텍스트에 포함되면 화면에서 완전히 숨김)
-      // ※ "10월 2차년도 고하이캡"/"10월 2차년도 주력상품" 열은 독립된 시상 항목이 아니라
-      //    아래 tier_gated 항목들의 게이트(gateMatch) 값으로만 쓰이므로 여기서 숨겨둡니다.
-      hiddenColumns: ["10월 2차년도 고하이캡", "10월 2차년도 주력상품"],
+      // 엑셀에는 남아있지만 이번 주 시상에서 쓰지 않는 열 — 헤더 글자 기준 / 위치 기준(F열=0, G열=1, H열=2 …) 중 편한 쪽으로 숨깁니다.
+      // ※ 4주차: G~I열(예전 고하이캡·주력상품 열)은 11월 1주차 / 주력상품 시상이 다시 반영될 때까지 위치 기준으로 숨깁니다.
+      //   다시 쓸 때는 hiddenColumnIndexes를 비우거나 줄이고 해당 시상 항목을 items에 추가하세요.
+      hiddenColumns: [],
+      hiddenColumnIndexes: [1, 2, 3],
       items: [
         {
-          match: "퍼펙트",   // K열 "퍼펙트케어활동량시상실적" (3주차 실적만 입력) — 헤더에 "퍼펙트"가 들어가면 인식
-          title: "퍼펙트 케어 활동량 시상",
-          emoji: "🙋",
-          type: "rate_cash",
-          unit: "원",
-          rate: 1.0,
-          note: "3주차 퍼펙트 케어 활동량 시상 : 10/12~10/16 · 3주차 실적의 100% 정률 지급 · 부문전체 月 1억 한도(소진 시 시상조기 종료) · 플래너 직접집행 · 관리사항 2~7 미적용"
-        },
-        {
-          match: "감사물품",
-          emoji: "🍚",
-          type: "threshold",
-          unit: "원",
-          threshold: 50000,
-          rewardText: "2026년 햅쌀 10kg 증정",
-          goods: { name: "2026년 햅쌀 10kg", qty: 1, unit: "포" },
-          note: "하이플래너 감사물품 지급 : ~10/16(금)까지 유실적 기본활동(가입설계 10건↑ & 신규 설계등록 5건↑ & 인보험 5만원↑) 참여 시 2026년 햅쌀 10kg 증정 (주소지 취합 후 자택배송 · 관리사항 2~7 미적용)"
-        },
-        {
-          match: "9월 2차년도 고하이캡",
+          // F열 "10월 2차년도 고하이캡 시상실적" (10월 4~5주차 실적). 11월 1~2주차 실적 열(gateMatch)이 엑셀에 생기기 전까지는
+          // allowPendingGate 덕분에 "11월 달성 시 지급" 안내만 나오고 시상금 합계에는 들어가지 않습니다.
+          match: "10월 2차년도 고하이캡",
           emoji: "🌉",
           type: "tier_gated",
           unit: "원",
-          gateMatch: "10월 2차년도 고하이캡",
+          baseLabel: "10월 4~5주차",
+          allowPendingGate: true,
+          gateMatch: "11월 2차년도 고하이캡",
           gateThreshold: 100000,
-          gateLabel: "10월 1~3주차 실적",
-          gateAchievedText: "10월 고하이캡 10만원 ↑ 달성",
+          gateLabel: "11월 1~2주차 실적",
+          gateAchievedText: "11월 고하이캡 10만원 ↑ 달성",
           tiers: [
             { amount: 100000, reward: "500,000원", value: 500000, type: "cash" },
             { amount: 200000, reward: "1,000,000원", value: 1000000, type: "cash" },
             { amount: 300000, reward: "1,500,000원", value: 1500000, type: "cash" }
           ],
-          note: "2차년도 고하이캡 브릿지 참여기간 : 9월 3~5주 & 10월 1~3주 · 하이캡 17배수 이상 계약의 인보험 실적 합산 기준 · 9월 구간 달성 + 10월 1~3주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
+          note: "2차년도 고하이캡 브릿지 참여기간 : 10월 4~5주(10/19~10/30) & 11월 1~2주(11/1~11/13) · 장기 하이캡 17배수 이상 계약의 인보험 실적 합산 기준 · 10월 4~5주차 구간 달성 + 11월 1~2주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
         },
         {
-          match: "9월 2차년도 주력상품",
-          emoji: "🎯",
-          type: "tier_gated",
+          // J열 "창립기념 감사물품 추가시상" 실적 (인보험)
+          match: "창립기념",
+          title: "창립기념 감사물품 추가시상",
+          emoji: "🍚",
+          type: "tier",
           unit: "원",
-          ended: true,   // 기간 종료 — 결과(확정)만 표시
-          gateMatch: "10월 2차년도 주력상품",
-          gateThreshold: 100000,
-          gateLabel: "10월 1~2주차 실적",
-          gateAchievedText: "10월 주력상품 10만원 ↑ 달성",
           tiers: [
-            { amount: 100000, reward: "240,000원", value: 240000, type: "cash" },
-            { amount: 200000, reward: "660,000원", value: 660000, type: "cash" }
+            { amount: 100000, reward: "햅쌀 5kg", value: 0, type: "product" },
+            { amount: 200000, reward: "햅쌀 10kg", value: 0, type: "product" },
+            { amount: 300000, reward: "햅쌀 15kg (10kg+5kg)", value: 0, type: "product" }
           ],
-          note: "[종료] 2차년도 주력상품 브릿지 참여기간 : 9월 4~5주 & 10월 1~2주 · 대상상품 : 퍼펙트플러스, 간편보험, 인생의품격, 굿앤굿1540, 굿앤굿스타 · 9월 구간 달성 + 10월 1~2주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
+          note: "현대해상 『창립기념 감사행사』 中 하이플래너 감사물품 지급 추가시상 : 4~5주차(10/19~10/30) 인보험 30만원 ↑ 햅쌀 15kg(10kg+5kg) / 20만원 ↑ 햅쌀 10kg 1개 / 10만원 ↑ 햅쌀 5kg 1개 (주소지 취합 후 배송 · 관리사항 2~7 미적용)"
+        },
+        {
+          // K열 "하이스타 조커시상" 실적 (4~5주차 인보험)
+          match: "조커",
+          title: "하이스타 조커시상",
+          emoji: "🃏",
+          type: "threshold",
+          unit: "원",
+          threshold: 100000,
+          rewardText: "하이스타 조커 인정",
+          note: "중부지역단 하이스타 조커시상(4~5주차 운영) : 4~5주차 人 10만원 달성 플래너 하이스타 조커 인정"
         }
       ]
     },
@@ -117,27 +112,10 @@ const CONFIG = {
     jiyeokdan: {
       sheetName: "지역단시상",
       tabLabel: "지역단시상",
-      // G/H열(당월 인보험실적, 당월 환산실적)은 지역단시상 자체 시상 항목이 아니라
-      // MY팀 현황 순위 계산에만 쓰이는 값이라 이 탭 화면에서는 숨깁니다.
-      hiddenColumns: ["당월 인보험", "환산", "이불", "선착순", "활동량"],
-      // ※ type "team_prize" : 영업팀 시상. 같은 지점·팀 전원의 이 열 실적 합계 ÷ 팀목표(팀목표 시트)로 달성률을 계산합니다.
-      //     baseRate 이상 → basePrize 지급 / topRate 이상 + 같은 그룹(구분+그룹) 내 1위 → topPrize 추가
-      //     rankBy: "rate"(달성률 순위) 또는 "amount"(팀 인보험 실적 금액 순위)
-      items: [
-        {
-          match: "3주차 인보험",
-          title: "영업팀 시상",
-          emoji: "👥",
-          type: "team_prize",
-          unit: "원",
-          baseRate: 0.25,
-          basePrize: 200000,
-          topRate: 0.30,
-          topPrize: 100000,
-          rankBy: "rate",
-          note: "3주차 영업팀 시상 기간 : 10/9(금)~10/16(금) · 영업팀 인보험 구간실적이 팀 목표의 25% 이상이면 20만원 지급, 30% 이상 + 그룹별 1위 시 10만원 추가지급 · 최종 실적 규모차등률 ±30% 차등지급 · 최우수 영업팀 목표 준수"
-        }
-      ]
+      // G/H열(당월 인보험실적, 당월 환산실적)은 MY팀 현황 순위 계산에만 쓰이는 값이라 이 탭 화면에서는 숨깁니다.
+      hiddenColumns: ["당월 인보험", "환산", "이불", "선착순", "활동량", "3주차 인보험"],
+      // 이번 주(4주차)는 지역단시상이 없습니다. 새 지역단시상이 생기면 pastWeeks의 w3 영업팀 시상처럼 항목을 추가하세요.
+      items: []
     }
   },
   // 3-0) 지난 주차 결과 ("지난 주차" 탭에서 주차별로 확인)
@@ -202,6 +180,83 @@ const CONFIG = {
           goodsName: "순금 0.3g",
           goodsUnit: "개",
           note: "권역별 순위시상(종료) : 2주차 인보험 구간 30만원 이상자 중 권역(천안·평택·서산)별 1~3위에게 순금 0.3g 지급 · 선착순 물품시상과 중복지급 · 동점 시 공동 순위"
+        }
+      ]
+    },
+    {
+      key: "w3",
+      label: "3주차",
+      sheetName: "3주차",
+      tabLabel: "3주차 시상",
+      title: "3주차 부문·영업팀 시상",
+      period: "10/12~10/16 · 종료",
+      // 3주차 시트: F열 3주차 인보험(영업팀 시상) / G열 감사물품 / H열 퍼펙트케어 활동량 / I~L열 고하이캡·주력상품 시상실적
+      hiddenColumns: ["10월 2차년도 고하이캡", "10월 2차년도 주력상품"],
+      items: [
+        {
+          match: "3주차 인보험",
+          title: "영업팀 시상",
+          emoji: "👥",
+          type: "team_prize",
+          unit: "원",
+          baseRate: 0.25,
+          basePrize: 200000,
+          topRate: 0.30,
+          topPrize: 100000,
+          rankBy: "rate",
+          note: "3주차 영업팀 시상(종료) : 10/9(금)~10/16(금) · 영업팀 인보험 구간실적이 팀 목표의 25% 이상이면 20만원 지급, 30% 이상 + 그룹별 1위 시 10만원 추가지급 · 최종 실적 규모차등률 ±30% 차등지급"
+        },
+        {
+          match: "퍼펙트",
+          title: "퍼펙트 케어 활동량 시상",
+          emoji: "🙋",
+          type: "rate_cash",
+          unit: "원",
+          rate: 1.0,
+          note: "3주차 퍼펙트 케어 활동량 시상(종료) : 10/12~10/16 · 3주차 실적의 100% 정률 지급 · 플래너 직접집행 · 관리사항 2~7 미적용"
+        },
+        {
+          match: "감사물품",
+          emoji: "🍚",
+          type: "threshold",
+          unit: "원",
+          threshold: 50000,
+          rewardText: "2026년 햅쌀 10kg 증정",
+          goods: { name: "2026년 햅쌀 10kg", qty: 1, unit: "포" },
+          note: "하이플래너 감사물품 지급(종료) : ~10/16(금) 유실적 기본활동(가입설계 10건↑ & 신규 설계등록 5건↑ & 인보험 5만원↑) 참여 시 2026년 햅쌀 10kg 증정 (주소지 취합 후 자택배송 · 관리사항 2~7 미적용)"
+        },
+        {
+          match: "9월 2차년도 고하이캡",
+          emoji: "🌉",
+          type: "tier_gated",
+          unit: "원",
+          ended: true,
+          gateMatch: "10월 2차년도 고하이캡",
+          gateThreshold: 100000,
+          gateLabel: "10월 1~3주차 실적",
+          gateAchievedText: "10월 고하이캡 10만원 ↑ 달성",
+          tiers: [
+            { amount: 100000, reward: "500,000원", value: 500000, type: "cash" },
+            { amount: 200000, reward: "1,000,000원", value: 1000000, type: "cash" },
+            { amount: 300000, reward: "1,500,000원", value: 1500000, type: "cash" }
+          ],
+          note: "[종료] 2차년도 고하이캡 브릿지 참여기간 : 9월 3~5주 & 10월 1~3주 · 하이캡 17배수 이상 계약의 인보험 실적 합산 기준 · 9월 구간 달성 + 10월 1~3주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
+        },
+        {
+          match: "9월 2차년도 주력상품",
+          emoji: "🎯",
+          type: "tier_gated",
+          unit: "원",
+          ended: true,
+          gateMatch: "10월 2차년도 주력상품",
+          gateThreshold: 100000,
+          gateLabel: "10월 1~2주차 실적",
+          gateAchievedText: "10월 주력상품 10만원 ↑ 달성",
+          tiers: [
+            { amount: 100000, reward: "240,000원", value: 240000, type: "cash" },
+            { amount: 200000, reward: "660,000원", value: 660000, type: "cash" }
+          ],
+          note: "[종료] 2차년도 주력상품 브릿지 참여기간 : 9월 4~5주 & 10월 1~2주 · 대상상품 : 퍼펙트플러스, 간편보험, 인생의품격, 굿앤굿1540, 굿앤굿스타 · 9월 구간 달성 + 10월 1~2주차 10만원 이상 시 지급 · 신계약 체결 후 이관된 계약은 시상제외 · 관리사항 1~7적용"
         }
       ]
     }
@@ -661,25 +716,24 @@ const CONFIG = {
         <div class="rules-cat">부문시상</div>
 
         <div class="rules-block">
-          <div class="rules-block-title">1. 퍼펙트 케어 활동량 시상 (1억 한도 / 新 퍼펙트 플러스 개정 준비용)</div>
+          <div class="rules-block-title">1. 현대해상 『창립기념 감사행사』 中, 하이플래너 감사물품 지급 추가시상</div>
           <div class="table-scroll">
             <table class="rules-table">
-              <thead><tr><th>기준</th><th>기간</th><th>지급률</th></tr></thead>
+              <thead><tr><th>기간</th><th>기준</th><th>지급품</th></tr></thead>
               <tbody>
                 <tr>
-                  <td rowspan="3">부문전체<br>퍼펙트 케어<br><b>月 1억 한도</b><br><span class="pct">(소진 시 시상조기 종료)</span></td>
-                  <td>1주차<br>(10/1~10/2)</td>
-                  <td class="amt">10% 정률 소급지급</td>
+                  <td rowspan="3" class="hl">4~5주차<br>(10/19~10/30)</td>
+                  <td>인보험 <b>30만 ↑</b> 참여자</td>
+                  <td class="amt">햅쌀 15kg<br><span class="pct">(10kg+5kg)</span></td>
                 </tr>
-                <tr><td>2주차<br>(10/3~10/8)</td><td class="amt">30% 정률 소급지급</td></tr>
-                <tr><td>3주차<br>(10/12~10/16)</td><td class="amt">100% 정률</td></tr>
+                <tr><td>인보험 <b>20만 ↑</b> 참여자</td><td class="amt">햅쌀 10kg<br><span class="pct">1개</span></td></tr>
+                <tr><td>인보험 <b>10만 ↑</b> 참여자</td><td class="amt">햅쌀 5kg<br><span class="pct">1개</span></td></tr>
               </tbody>
             </table>
           </div>
           <ul class="rules-notes">
-            <li>『퍼펙트 케어간병』+ 개정 후 新 『퍼펙트 플러스』 유입 목적 (개정 전, 기가입 상품 확대하여 New 납입지원 특약효과(누적제외 진단금) 극대화)</li>
-            <li>1, 2주차는 부문 기본시상 및 활동량 50% 추가시상에 대한 역시상을 방지하고자 차익분을 소급하여 지급합니다.</li>
-            <li>플래너 직접집행 / 관리사항 2~7 미적용</li>
+            <li>주소지 취합 후, 배송 예정입니다.</li>
+            <li>관리사항 2~7 미적용</li>
           </ul>
         </div>
 
@@ -687,11 +741,11 @@ const CONFIG = {
           <div class="rules-block-title">2. 2차년도 고하이캡 시책_플래너 직접배정</div>
           <div class="table-scroll">
             <table class="rules-table">
-              <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 3~5주차</th><th>10월 1~3주차</th><th>2차년도 시상금</th></tr></thead>
+              <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>10월 4~5주차</th><th>11월 1~2주차</th><th>2차년도 시상금</th></tr></thead>
               <tbody>
                 <tr>
                   <td rowspan="3">브릿지<br>참여</td>
-                  <td rowspan="3" class="hl">9월 3~5주<br>&amp;<br>10월 1~3주</td>
+                  <td rowspan="3" class="hl">10월 4~5주<br>&amp;<br>11월 1~2주</td>
                   <td rowspan="3">장기 하이캡<br>17배 ↑ 계약<br>(인보험)</td>
                   <td>30만 ↑</td>
                   <td rowspan="3">10만 ↑</td>
@@ -703,8 +757,8 @@ const CONFIG = {
             </table>
           </div>
           <ul class="rules-notes">
-            <li>9월 3~5주차 : 9월 14일 ~ 9월 마감일 / 10월 1~3주차 : 10월 1일 ~ 10월 16일</li>
-            <li>10월 1일 신계약분부터 『인생의 품격』통합사망 3천만 부보조건 삭제 : 통합사망 미부보 계약도 하이캡 17배 이상 시 상기시상 적용 (9월 3~5주차는 9월 시상안내로 『인생의 품격』 3천만 부보 사망조건 적용)</li>
+            <li>10월 4~5주차 : 10월 19일 ~ 10월 마감일 / 11월 1~2주차 : 11월 1일 ~ 11월 13일</li>
+            <li>『인생의 품격』통합사망 3천만 부보조건 삭제 : 통합사망 미부보 계약도 장기하이캡 17배 이상 시 상기시상 적용</li>
             <li>신계약 체결 후, 이관된 계약은 시상제외</li>
             <li>장기하이캡 배수는 소수점 둘째자리에서 반올림</li>
             <li>관리사항 1~7적용</li>
@@ -712,74 +766,23 @@ const CONFIG = {
         </div>
 
         <div class="rules-block">
-          <div class="rules-block-title">3. 하이플래너 감사물품 지급 : 【현대해상을 지탱하는 든든한 밥심! 저희가 채워드립니다!】</div>
+          <div class="rules-block-title">3. 중부지역단 하이스타 조커시상 (4~5주차 운영)</div>
           <div class="table-scroll">
             <table class="rules-table">
-              <thead><tr><th>기간</th><th>기준</th><th>지급품</th></tr></thead>
-              <tbody><tr><td>~10/16(금)</td><td>유실적 기본활동*</td><td class="amt">2026년 햅쌀 10kg<br><span class="pct">(아산 맑은 쌀)</span></td></tr></tbody>
+              <thead><tr><th>조건</th><th>시상적용</th></tr></thead>
+              <tbody><tr><td>4~5주차 人 <b>10만원</b> 달성 플래너</td><td class="amt">하이스타<br>조커인정</td></tr></tbody>
             </table>
           </div>
-          <ul class="rules-notes">
-            <li>유실적 활동 : 가입설계 10건 ↑ &amp; 신규 설계등록 5건 ↑ &amp; 인보험 5만원 ↑ 참여</li>
-            <li>주소지 취합 후, 자택배송 예정입니다.</li>
-            <li>관리사항 2~7 미적용</li>
-          </ul>
-        </div>
-
-        <div class="rules-block">
-          <div class="rules-block-title">4. 2차년도 주력상품 시책_플래너 직접배정 (종료)</div>
-          <div class="table-scroll">
-            <table class="rules-table">
-              <thead><tr><th>구분</th><th>기간</th><th>계약</th><th>9월 4~5주차</th><th>10월 1주차</th><th>2차년도 시상금</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td rowspan="2">브릿지<br>참여</td>
-                  <td rowspan="2" class="hl">9월 4~5주<br>&amp;<br>10월 1~2주</td>
-                  <td rowspan="2">주력상품</td>
-                  <td>20만 ↑</td>
-                  <td rowspan="2">10만 ↑</td>
-                  <td class="amt">66만<br><span class="pct">(약 220%)</span></td>
-                </tr>
-                <tr><td>10만 ↑</td><td class="amt">24만<br><span class="pct">(약 120%)</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <ul class="rules-notes">
-            <li>기간 종료 — 결과만 확인할 수 있어요.</li>
-            <li>9월 4~5주차 : 9월 21일 ~ 9월 마감일 / 10월 1~2주차 : 10월 1일 ~ 10월 8일</li>
-            <li>주력상품 : 퍼펙트플러스 + 간편보험 + 인생의 품격 + 굿앤굿 1540 + 굿앤굿 스타 (연납기, 세납기 전체, 하이캡 무관)</li>
-            <li>신계약 체결 후, 이관된 계약은 시상제외 / 관리사항 1~7적용</li>
-          </ul>
         </div>
       </div>
 
       <div class="rules-group">
         <div class="rules-cat">지역단시상</div>
         <div class="rules-block">
-          <div class="rules-block-title">중부지역단 10월 3주차 팀시상</div>
-          <div class="table-scroll">
-            <table class="rules-table">
-              <thead><tr><th>기간</th><th>구분</th><th>지급조건</th><th>① 기본</th><th>② 추가</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td class="hl">10/9(금)<br>~<br>10/16(금)</td>
-                  <td>중부지역단<br>영업팀<br>(지역팀포함)</td>
-                  <td>영업팀별<br>인보험 구간<br><b>25% ↑</b></td>
-                  <td class="amt">구간 25% ↑<br>20만원 지급</td>
-                  <td class="amt">구간 30% ↑<br>&amp; 그룹별 1위<br>10만원 추가지급</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <ul class="rules-notes">
-            <li>최종 실적 규모차등률 ±30% 차등지급</li>
-            <li>최우수 영업팀 목표 준수</li>
-            <li>예시) 지역단 팀 전체 평균실적 500천원 기준 ▶ 800천원 &amp; 27% 목표 달성 시, 20만원 × 130% = 260천원</li>
-            <li>팀 목표(10월 인보험 매출목표)는 그룹(CPA/TC · A~D)별로 설정되어 있으며, 아래 코드 조회 후 지역단시상 탭에서 우리 팀 달성률과 그룹 내 순위를 확인할 수 있어요.</li>
-          </ul>
+          <div class="rules-block-title">이번 주 지역단시상은 없습니다.</div>
+          <ul class="rules-notes"><li>지난 주차 시상 결과는 '지난 주차' 탭에서 확인할 수 있어요.</li></ul>
         </div>
       </div>
-
     </div>
 
     <!-- 코드 입력 화면 -->
@@ -1214,14 +1217,15 @@ const CONFIG = {
         for (var gi = 0; gi < mainSheetData.headers.length; gi++){
           if (mainSheetData.headers[gi].indexOf(cfg.gateMatch) !== -1){ gateIdx = gi; break; }
         }
+        var gatePending = (gateIdx === -1 && !!cfg.allowPendingGate);
         var gateValue = (gateIdx === -1 || !mainRecord) ? 0 : (mainRecord.values[gateIdx] || 0);
         var gateAchieved = gateValue >= cfg.gateThreshold;
         var tg = judgeTier(value, cfg.tiers);
         var ntg = nextTier(value, cfg.tiers);
-        var finalAchieved = (gateAchieved && tg) ? tg : null;
+        var finalAchieved = (gateAchieved && tg && !gatePending) ? tg : null;
         if (finalAchieved){ if (finalAchieved.type === 'cash') cashTotal += finalAchieved.value; else addGoods(finalAchieved.reward, 1, '', false); }
         items.push({
-          configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended,
+          configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended, gatePending: gatePending, baseLabel: cfg.baseLabel || '9월',
           value: value, unit: cfg.unit, tierRaw: tg, tierAchieved: finalAchieved, tierNext: ntg,
           gateValue: gateValue, gateThreshold: cfg.gateThreshold, gateAchieved: gateAchieved,
           gateLabel: cfg.gateLabel || '10월 실적', gateAchievedText: cfg.gateAchievedText, note: cfg.note
@@ -1232,7 +1236,7 @@ const CONFIG = {
         var nt = nextTier(value, cfg.tiers);
         if (t){ if (t.type === 'cash') cashTotal += t.value; else addGoods(t.reward, 1, '', false); }
         items.push({
-          configured:true, type:'tier', emoji: cfg.emoji, label: headerText || cfg.match,
+          configured:true, type:'tier', emoji: cfg.emoji, label: cfg.title || headerText || cfg.match,
           value: value, unit: cfg.unit, tierAchieved: t, tierNext: nt, note: cfg.note
         });
       }
@@ -1241,7 +1245,7 @@ const CONFIG = {
     if (mainSheetData && mainRecord){
       mainSheetData.headers.forEach(function(headerText, idx){
         var hidden = (section.hiddenColumns || []).some(function(h){ return headerText.indexOf(h) !== -1; });
-        if (hidden) return;
+        if (hidden || (section.hiddenColumnIndexes || []).indexOf(idx) !== -1) return;
         var cfgs = matchConfigItems(ownItems, headerText);
         var value = mainRecord.values[idx];
         if (!cfgs.length){
@@ -1367,7 +1371,7 @@ const CONFIG = {
       if (it.type === 'threshold'){
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.achieved ? '인정' : '미인정') + '</span></div>' +
           '<div class="detail-sub">이번 실적 ' + fmt(it.value) + it.unit + ' · 기준 ' + fmt(it.threshold) + it.unit + ' 이상</div>' +
-          '<div class="detail-tip' + (it.achieved ? ' done' : '') + '">' + (it.achieved ? (it.rewardText + ' 인정 완료! 🎉') : (fmt(it.remain) + it.unit + '만 더 채우면 ' + it.rewardText + '!')) + '</div></div>';
+          '<div class="detail-tip' + (it.achieved ? ' done' : '') + '">' + (it.achieved ? (/인정$/.test(it.rewardText) ? it.rewardText + ' 완료! 🎉' : it.rewardText + ' 인정 완료! 🎉') : (isFinal ? '기준 미달로 인정되지 않았어요' : (fmt(it.remain) + it.unit + '만 더 채우면 ' + it.rewardText + '!'))) + '</div></div>';
       } else if (it.type === 'unit_goods'){
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + it.units + escapeHtml(it.goodsUnit) + '</span></div>' +
           '<div class="detail-sub">' + escapeHtml(it.goodsName) + '<br>2주차 인보험 실적 ' + fmt(it.value) + it.unit + ' · ' + fmt(it.unitAmount) + it.unit + '당 1' + escapeHtml(it.goodsUnit) + ' (인당 ' + it.maxUnits + escapeHtml(it.goodsUnit) + ' 한도)</div>';
@@ -1397,10 +1401,10 @@ const CONFIG = {
         html += '<div class="detail-foot">※ 선착순 시상은 종료되었으며, 지급 세트 수가 확정되었어요.</div></div>';
       } else if (it.type === 'rate_cash'){
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + fmt(it.amount) + '원</span></div>' +
-          '<div class="detail-sub">3주차 실적 ' + fmt(it.value) + it.unit + ' × 지급률 ' + Math.round(it.rate * 100) + '%</div>' +
+          '<div class="detail-sub">' + (isFinal ? '최종' : '3주차') + ' 실적 ' + fmt(it.value) + it.unit + ' × 지급률 ' + Math.round(it.rate * 100) + '%</div>' +
           (it.amount > 0
-            ? '<div class="detail-tip done">' + fmt(it.amount) + '원 지급 예상! 🎉</div>'
-            : '<div class="detail-tip">실적이 쌓이는 만큼 100% 정률로 지급돼요.</div>') +
+            ? '<div class="detail-tip done">' + fmt(it.amount) + (isFinal ? '원 지급 대상이었어요' : '원 지급 예상! 🎉') + '</div>'
+            : (isFinal ? '<div class="detail-tip warn">지급 대상이 아니었어요</div>' : '<div class="detail-tip">실적이 쌓이는 만큼 100% 정률로 지급돼요.</div>')) +
           '<div class="detail-foot">※ 부문 전체 月 1억 한도 · 소진 시 시상 조기 종료</div></div>';
       } else if (it.type === 'team_prize'){
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.status === 'ok' ? fmt(it.prize) + '원' : '-') + '</span></div>';
@@ -1414,13 +1418,13 @@ const CONFIG = {
             '팀 인보험 실적 ' + fmt(it.sum) + it.unit + ' / 목표 ' + fmt(tm.target) + it.unit + ' (달성률 <b>' + pct(it.rate) + '</b>)<br>' +
             '그룹 내 ' + (it.sameRank > 0 ? '공동 ' : '') + it.rank + '위 (' + it.groupSize + '팀 중)</div>';
           if (!it.baseOk){
-            html += '<div class="detail-tip">팀 실적이 ' + fmt(it.baseRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.baseRate * 100) + '%가 되면 ' + fmt(it.basePrize) + '원 지급!</div>';
+            html += isFinal ? '<div class="detail-tip warn">달성률 ' + Math.round(it.baseRate * 100) + '%에 못 미쳐 지급 대상이 아니었어요</div>' : '<div class="detail-tip">팀 실적이 ' + fmt(it.baseRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.baseRate * 100) + '%가 되면 ' + fmt(it.basePrize) + '원 지급!</div>';
           } else if (it.topOk){
-            html += '<div class="detail-tip done">🎉 기본 ' + fmt(it.basePrize) + '원 + 그룹 1위 추가 ' + fmt(it.topPrize) + '원 = ' + fmt(it.prize) + '원 지급 예상!</div>';
+            html += '<div class="detail-tip done">🎉 기본 ' + fmt(it.basePrize) + '원 + 그룹 1위 추가 ' + fmt(it.topPrize) + '원 = ' + fmt(it.prize) + (isFinal ? '원 지급 대상이었어요</div>' : '원 지급 예상!</div>');
           } else if (it.rate >= it.topRate){
-            html += '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 그룹 1위가 되면 ' + fmt(it.topPrize) + '원이 추가돼요.</div>';
+            html += isFinal ? '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 대상이었어요 (그룹 1위 추가 조건은 해당되지 않았어요)</div>' : '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 그룹 1위가 되면 ' + fmt(it.topPrize) + '원이 추가돼요.</div>';
           } else {
-            html += '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 팀 실적이 ' + fmt(it.topRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.topRate * 100) + '%가 되고 그룹 1위가 되면 ' + fmt(it.topPrize) + '원 추가!</div>';
+            html += isFinal ? '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 대상이었어요</div>' : '<div class="detail-tip done">기본 ' + fmt(it.basePrize) + '원 지급 구간 달성! 팀 실적이 ' + fmt(it.topRemain) + it.unit + ' 더 쌓여 달성률 ' + Math.round(it.topRate * 100) + '%가 되고 그룹 1위가 되면 ' + fmt(it.topPrize) + '원 추가!</div>';
           }
         }
         if (it.members && it.members.length){
@@ -1455,22 +1459,26 @@ const CONFIG = {
         html += '<div class="detail-foot">※ 선착순 물품시상과 중복지급 · 동점 시 공동 순위</div></div>';
       } else if (it.type === 'tier_gated'){
         var gAchieved = it.tierAchieved;
-        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (gAchieved ? fmt(gAchieved.value) + '원' : '0원') + '</span></div>' +
-          '<div class="detail-sub">9월 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + fmt(it.gateValue) + it.unit + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
-        if (!it.gateAchieved){
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.gatePending ? (it.tierRaw ? '조건부 ' + escapeHtml(it.tierRaw.reward) : '0원') : (gAchieved ? fmt(gAchieved.value) + '원' : '0원')) + '</span></div>' +
+          '<div class="detail-sub">' + escapeHtml(it.baseLabel) + ' 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + (it.gatePending ? '(아직 집계 전)' : fmt(it.gateValue) + it.unit) + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
+        if (it.gatePending){
+          html += it.tierRaw
+            ? '<div class="detail-tip done">' + escapeHtml(it.baseLabel) + ' 구간 달성! ' + escapeHtml(it.gateLabel) + ' ' + fmt(it.gateThreshold) + it.unit + ' 이상 달성 시 ' + escapeHtml(it.tierRaw.reward) + ' 지급 확정 (실적 반영 후 확인돼요)</div>'
+            : '<div class="detail-tip warn">' + escapeHtml(it.baseLabel) + ' 실적이 최소 구간(100,000원) 미만이라 아직 지급 대상이 아니에요.</div>';
+        } else if (!it.gateAchieved){
           var gRemain = Math.max(0, it.gateThreshold - it.gateValue);
           html += it.ended
             ? '<div class="detail-tip warn">10월 실적 기준(' + fmt(it.gateThreshold) + it.unit + ' 이상) 미달로 지급 대상이 아니에요 (기간 종료)</div>'
             : '<div class="detail-tip">' + fmt(gRemain) + it.unit + '만큼 더 채워야 시상금이 최종 지급됩니다.</div>';
         } else if (gAchieved){
-          html += '<div class="detail-tip done">9월 달성 구간 + ' + escapeHtml(it.gateAchievedText || it.gateLabel) + '! 🎉</div>';
+          html += '<div class="detail-tip done">' + escapeHtml(it.baseLabel) + ' 달성 구간 + ' + escapeHtml(it.gateAchievedText || it.gateLabel) + '! 🎉</div>';
         } else {
-          html += '<div class="detail-tip warn">9월 실적이 최소 구간(10만원) 미만이라 지급 대상이 아닙니다.</div>';
+          html += '<div class="detail-tip warn">' + escapeHtml(it.baseLabel) + ' 실적이 최소 구간(10만원) 미만이라 지급 대상이 아닙니다.</div>';
         }
         html += '</div>';
       } else {
         var achieved = it.tierAchieved;
-        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (achieved ? fmt(achieved.value) + '원' : '0원') + '</span></div>' +
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (achieved ? (achieved.type === 'product' ? escapeHtml(achieved.reward) : fmt(achieved.value) + '원') : ((it.tierNext && it.tierNext.type === 'product') ? '-' : '0원')) + '</span></div>' +
           '<div class="detail-sub">' + (isFinal ? '최종 실적 ' : '이번 실적 ') + fmt(it.value) + it.unit + (achieved ? ' · ' + achieved.reward : '') + '</div>';
         if (isFinal){
           html += achieved
