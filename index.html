@@ -70,6 +70,7 @@ const CONFIG = {
           unit: "원",
           baseLabel: "10월 4~5주차",
           allowPendingGate: true,
+          gateEndDate: "2026-11-13",   // 이 날짜까지는 11월 실적이 기준 미달이어도 '집계 전'으로 보고 예상 시상금 표시
           gateMatch: "11월 2차년도 고하이캡",
           gateThreshold: 100000,
           gateLabel: "11월 1~2주차 실적",
@@ -1217,15 +1218,16 @@ const CONFIG = {
         for (var gi = 0; gi < mainSheetData.headers.length; gi++){
           if (mainSheetData.headers[gi].indexOf(cfg.gateMatch) !== -1){ gateIdx = gi; break; }
         }
-        var gatePending = (gateIdx === -1 && !!cfg.allowPendingGate);
         var gateValue = (gateIdx === -1 || !mainRecord) ? 0 : (mainRecord.values[gateIdx] || 0);
         var gateAchieved = gateValue >= cfg.gateThreshold;
+        // 11월 열이 아직 없거나, 있어도 11월 1~2주차 기간(gateEndDate까지) 중에 기준 미달이면 '집계 전'으로 보고 예상 시상금을 먼저 보여줍니다.
+        var gatePending = !!cfg.allowPendingGate && !gateAchieved && (gateIdx === -1 || new Date() <= new Date((cfg.gateEndDate || '1970-01-01') + 'T23:59:59'));
         var tg = judgeTier(value, cfg.tiers);
         var ntg = nextTier(value, cfg.tiers);
         var finalAchieved = ((gateAchieved || gatePending) && tg) ? tg : null;   // 11월 열이 아직 없으면(gatePending) 구간 시상금을 예상 시상금에 먼저 반영
         if (finalAchieved){ if (finalAchieved.type === 'cash') cashTotal += finalAchieved.value; else addGoods(finalAchieved.reward, 1, '', false); }
         items.push({
-          configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended, gatePending: gatePending, baseLabel: cfg.baseLabel || '9월',
+          configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended, gatePending: gatePending, gateFound: gateIdx !== -1, baseLabel: cfg.baseLabel || '9월',
           value: value, unit: cfg.unit, tierRaw: tg, tierAchieved: finalAchieved, tierNext: ntg,
           gateValue: gateValue, gateThreshold: cfg.gateThreshold, gateAchieved: gateAchieved,
           gateLabel: cfg.gateLabel || '10월 실적', gateAchievedText: cfg.gateAchievedText, note: cfg.note
@@ -1460,7 +1462,7 @@ const CONFIG = {
       } else if (it.type === 'tier_gated'){
         var gAchieved = it.tierAchieved;
         html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.gatePending ? (it.tierRaw ? '예상 ' + escapeHtml(it.tierRaw.reward) : '0원') : (gAchieved ? fmt(gAchieved.value) + '원' : '0원')) + '</span></div>' +
-          '<div class="detail-sub">' + escapeHtml(it.baseLabel) + ' 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + (it.gatePending ? '(아직 집계 전)' : fmt(it.gateValue) + it.unit) + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
+          '<div class="detail-sub">' + escapeHtml(it.baseLabel) + ' 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + ((it.gatePending && !it.gateFound) ? '(아직 집계 전)' : fmt(it.gateValue) + it.unit) + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
         if (it.gatePending){
           html += it.tierRaw
             ? '<div class="detail-tip done">' + escapeHtml(it.baseLabel) + ' 구간 달성! 예상 시상금 ' + escapeHtml(it.tierRaw.reward) + ' · ' + escapeHtml(it.gateLabel) + '이 ' + fmt(it.gateThreshold) + it.unit + ' 이상이면 시상금이 확정됩니다.</div>'
