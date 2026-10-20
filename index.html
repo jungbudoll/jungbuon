@@ -1222,7 +1222,7 @@ const CONFIG = {
         var gateAchieved = gateValue >= cfg.gateThreshold;
         var tg = judgeTier(value, cfg.tiers);
         var ntg = nextTier(value, cfg.tiers);
-        var finalAchieved = (gateAchieved && tg && !gatePending) ? tg : null;
+        var finalAchieved = ((gateAchieved || gatePending) && tg) ? tg : null;   // 11월 열이 아직 없으면(gatePending) 구간 시상금을 예상 시상금에 먼저 반영
         if (finalAchieved){ if (finalAchieved.type === 'cash') cashTotal += finalAchieved.value; else addGoods(finalAchieved.reward, 1, '', false); }
         items.push({
           configured:true, type:'tier_gated', emoji: cfg.emoji, label: (headerText || cfg.match) + (cfg.ended ? ' (종료·확정)' : ''), ended: !!cfg.ended, gatePending: gatePending, baseLabel: cfg.baseLabel || '9월',
@@ -1459,11 +1459,11 @@ const CONFIG = {
         html += '<div class="detail-foot">※ 선착순 물품시상과 중복지급 · 동점 시 공동 순위</div></div>';
       } else if (it.type === 'tier_gated'){
         var gAchieved = it.tierAchieved;
-        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.gatePending ? (it.tierRaw ? '조건부 ' + escapeHtml(it.tierRaw.reward) : '0원') : (gAchieved ? fmt(gAchieved.value) + '원' : '0원')) + '</span></div>' +
+        html += '<div class="detail-card"><div class="detail-title-row"><span class="detail-title">' + (it.emoji||'') + ' ' + escapeHtml(it.label) + '</span><span class="detail-amount">' + (it.gatePending ? (it.tierRaw ? '예상 ' + escapeHtml(it.tierRaw.reward) : '0원') : (gAchieved ? fmt(gAchieved.value) + '원' : '0원')) + '</span></div>' +
           '<div class="detail-sub">' + escapeHtml(it.baseLabel) + ' 실적 ' + fmt(it.value) + it.unit + (it.tierRaw ? ' · ' + it.tierRaw.reward + ' 구간' : '') + '<br>' + escapeHtml(it.gateLabel) + ' ' + (it.gatePending ? '(아직 집계 전)' : fmt(it.gateValue) + it.unit) + ' (기준 ' + fmt(it.gateThreshold) + it.unit + ' 이상)</div>';
         if (it.gatePending){
           html += it.tierRaw
-            ? '<div class="detail-tip done">' + escapeHtml(it.baseLabel) + ' 구간 달성! ' + escapeHtml(it.gateLabel) + ' ' + fmt(it.gateThreshold) + it.unit + ' 이상 달성 시 ' + escapeHtml(it.tierRaw.reward) + ' 지급 확정 (실적 반영 후 확인돼요)</div>'
+            ? '<div class="detail-tip done">' + escapeHtml(it.baseLabel) + ' 구간 달성! 예상 시상금 ' + escapeHtml(it.tierRaw.reward) + ' · ' + escapeHtml(it.gateLabel) + '이 ' + fmt(it.gateThreshold) + it.unit + ' 이상이면 시상금이 확정됩니다.</div>'
             : '<div class="detail-tip warn">' + escapeHtml(it.baseLabel) + ' 실적이 최소 구간(100,000원) 미만이라 아직 지급 대상이 아니에요.</div>';
         } else if (!it.gateAchieved){
           var gRemain = Math.max(0, it.gateThreshold - it.gateValue);
